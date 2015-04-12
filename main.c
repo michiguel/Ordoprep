@@ -40,6 +40,7 @@
 
 
 	#include "pgnget.h"
+	#include "inidone.h"
 
 /*
 |
@@ -109,8 +110,64 @@ const char *OPTION_LIST = "vhHdm:g:p:qLo:";
 |
 \*--------------------------------------------------------------*/
 
-static void	save2pgnf(FILE *textf)
+#if 0
+struct gamei {
+	player_t 	whiteplayer;
+	player_t 	blackplayer;
+	int32_t 	score;	
+};
+
+struct GAMES {
+	gamesnum_t 	n; 
+	gamesnum_t	size;
+	struct gamei *ga;
+};
+
+struct PLAYERS {
+	player_t	n; 
+	player_t	size;
+	player_t	anchored_n;
+	const char  **name;
+	bool_t		perf_set;
+	bool_t		*flagged;
+	bool_t		*prefed;
+	bool_t		*priored;
+	int			*performance_type; 
+};
+
+#endif
+
+static void	
+save2pgnf(struct GAMES *gm, struct PLAYERS *pl, FILE *f)
 {
+	struct gamei *ga = gm->ga;
+	const char  **name = pl->name;
+	gamesnum_t i;
+
+	const char *result_string[] = {"1-0", "1/2-1/2", "0-1"};
+		
+		for (i = 0; i < gm->n; i++) {
+			int32_t sco = ga[i].score;
+			player_t wh = ga[i].whiteplayer;
+			player_t bl = ga[i].blackplayer;
+
+			if (sco == DISCARD) continue;
+			switch (sco) {
+				case WHITE_WIN:
+				case BLACK_WIN:
+				case RESULT_DRAW:
+					fprintf(f, "[White \"%s\"]\n"  , name[wh]    );
+					fprintf(f, "[Black \"%s\"]\n"  , name[bl]    );
+					fprintf(f, "[Result \"%s\"]\n" , result_string[sco] );
+					fprintf(f, "%s\n\n"            , result_string[sco] );
+					break;
+				default:
+					break;
+			}
+		}		
+
+
+
 	return;
 }
 
@@ -124,7 +181,9 @@ static bool_t discard(bool_t x)
 	return FALSE;
 }
 
-
+static struct GAMES 		Games;
+static struct PLAYERS 		Players;
+static struct GAMESTATS	Game_stats;
 
 /*
 |
@@ -279,19 +338,35 @@ int main (int argc, char *argv[])
 		fprintf (stderr, "Problems reading results from: %s\n", inputf);
 		return EXIT_FAILURE; 
 	}
-}
 
 
 
-	/*==== SET INPUT 2 ====*/
 
-#if 0
-	if (!pgn_getresults(inputf, QUIET_MODE)) {
-		printf ("Problems reading results from: %s\n", inputf);
-		return EXIT_FAILURE; 
+
+
+
+	/*==== memory initialization ====*/
+	{
+		player_t mpp 	= pdaba->n_players; 
+		gamesnum_t mg  	= pdaba->n_games;
+
+		if (!games_init (mg, &Games)) {
+			fprintf (stderr, "Could not initialize Games memory\n"); exit(EXIT_FAILURE);
+		} else 
+		if (!players_init (mpp, &Players)) {
+			games_done (&Games);
+			fprintf (stderr, "Could not initialize Players memory\n"); exit(EXIT_FAILURE);
+		} 
 	}
-	
-	transform_DB(&DB, &Game_stats); /* convert DB to global variables */
+	//assert(players_have_clear_flags(&Players));
+
+	database_transform (pdaba, &Games, &Players, &Game_stats); /* convert database to global variables */
+	if (0 == Games.n) {
+		fprintf (stderr, "ERROR: Input file contains no games\n");
+		return EXIT_FAILURE; 			
+	}
+
+}
 
 	// info output
 	if (!QUIET_MODE) {
@@ -305,7 +380,7 @@ int main (int argc, char *argv[])
 		printf ("No result           %8ld\n", Game_stats.noresult);
 		printf ("\n");	
 	}
-#endif
+
 
 	/*==== CALCULATIONS ====*/
 
@@ -331,7 +406,7 @@ int main (int argc, char *argv[])
 
 //	discard_playedmin(QUIET_MODE,Min_gamesplayed);
 
-	save2pgnf(textf);
+	save2pgnf(&Games, &Players, textf);
 	
 	if (textf_opened) fclose (textf);
 
