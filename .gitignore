@@ -1,0 +1,9 @@
+ordoprep
+*.o
+myopt/*.o
+*~
+commit.rb
+changename.rb
+gitstart.rb
+*.o
+myopt/*.o
