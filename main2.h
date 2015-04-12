@@ -23,7 +23,22 @@
 #define H_MAIN2
 /*>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>*/
 
-extern void main2(const char* f);
+#include "mytypes.h"
+
+extern 
+int 
+main2	( const char *inputf
+		, bool_t quietmode
+		, struct GAMES Games
+		, struct PLAYERS Players
+		, struct GAMESTATS	Game_stats
+		, double Min_percentage
+		, long int	Min_gamesplayed 
+		, bool_t Min_gamesplayed_use
+		, bool_t Min_percentage_use
+		, bool_t DISCARD_MODE
+		, FILE *textf
+);
 
 /*<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<*/
 #endif
