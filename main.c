@@ -18,18 +18,39 @@
     along with ordoprep.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-
 #include <stdio.h>
 #include <stdlib.h>
-#include "bool_t.h"
+
+//#include <ctype.h>
+//#include <string.h>
+//#include <math.h>
+//#include <assert.h>
+//#include <stddef.h>
+
+//#include "mystr.h"
 #include "proginfo.h"
+#include "boolean.h"
+//#include "pgnget.h"
 #include "main2.h"
 
-/*************************************************************************************************************/
+
+
+
+
+
+
+	#include "pgnget.h"
+
+/*
+|
+|	GENERAL OPTIONS
+|
+\*--------------------------------------------------------------*/
+
 #include "myopt.h"
 
 const char *license_str =
-"Copyright (c) 2014 Miguel A. Ballicora\n"
+"Copyright (c) 2015 Miguel A. Ballicora\n"
 "\n"
 "THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\n"
 "EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES\n"
@@ -48,31 +69,73 @@ static void usage (void);
 /* VARIABLES */
 
 	static bool_t QUIET_MODE;
+	static bool_t DISCARD_MODE;
 
 	static const char *copyright_str = 
-		"Copyright (c) 2014 Miguel A. Ballicora\n"
+		"Copyright (c) 2015 Miguel A. Ballicora\n"
 		"There is NO WARRANTY of any kind\n"
 		;
 
 	static const char *intro_str =
-		"Program to ____________\n"
+		"PGN file to only results\n"
 		;
 
 	static const char *example_str =
-		"Example explanation ______________.\n"
+		" Processes and shrinks input.pgn selecting only names and results\n"
+		" Output goes to output.pgn\n"
+		" if the swicth -o is not specified, the output goes to the screen\n"
 		;
 
 	static const char *help_str =
 		" -h        print this help\n"
+		" -H        print just the switches\n"
 		" -v        print version number and exit\n"
 		" -L        display the license information\n"
-		" -q        quiet (no output except error messages)\n"
-		" -i <file> input file\n"
+		" -q        quiet (no screen progress updates)\n"
+		" -d        discard players with either all wins or all losses\n"
+		" -m <perf> discard players with a percentage performance lower than <perf>\n"
+		" -g <min>  discard players with less than <min> number of games played\n"
+		" -p <file> input file in PGN format\n"
+		" -o <file> output file (text format), goes to the screen if not present\n"
 		"\n"
 	/*	 ....5....|....5....|....5....|....5....|....5....|....5....|....5....|....5....|*/
 		;
 
-const char *OPTION_LIST = "vhi:qL";
+const char *OPTION_LIST = "vhHdm:g:p:qLo:";
+
+/*
+|
+|	TEMP
+|
+\*--------------------------------------------------------------*/
+
+static void	save2pgnf(FILE *textf)
+{
+	return;
+}
+
+static void	calc_perf(void)
+{
+	return;
+}
+
+static bool_t discard(bool_t x)
+{
+	return FALSE;
+}
+
+
+
+/*
+|
+|	ORDOPREP DEFINITIONS
+|
+\*--------------------------------------------------------------*/
+
+static double 	Min_percentage  = 0.0;
+static long int	Min_gamesplayed = 0;
+static bool_t	Min_gamesplayed_use = FALSE;
+static bool_t 	Min_percentage_use = FALSE;
 
 /*
 |
@@ -82,17 +145,23 @@ const char *OPTION_LIST = "vhi:qL";
 
 int main (int argc, char *argv[])
 {
+	bool_t textf_opened;
+	FILE *textf;
+
 	int op;
-	const char *f;
-	int version_mode, help_mode, license_mode, input_mode;
+	const char *inputf, *textstr;
+	int version_mode, help_mode, switch_mode, license_mode, input_mode;
 
 	/* defaults */
 	version_mode = FALSE;
 	license_mode = FALSE;
 	help_mode    = FALSE;
+	switch_mode  = FALSE;
 	input_mode   = FALSE;
 	QUIET_MODE   = FALSE;
-	f            = NULL;
+	DISCARD_MODE = FALSE;
+	inputf       = NULL;
+	textstr 	 = NULL;
 
 	while (END_OF_OPTIONS != (op = options (argc, argv, OPTION_LIST))) {
 		switch (op) {
@@ -101,10 +170,28 @@ int main (int argc, char *argv[])
 						license_mode = TRUE;
 						break;
 			case 'h':	help_mode = TRUE;		break;
-			case 'i': 	input_mode = TRUE;
-					 	f = opt_arg;
+			case 'H':	switch_mode = TRUE;		break;
+			case 'p': 	input_mode = TRUE;
+					 	inputf = opt_arg;
+						break;
+			case 'o': 	textstr = opt_arg;
 						break;
 			case 'q':	QUIET_MODE = TRUE;	break;
+			case 'd':	DISCARD_MODE = TRUE;	break;
+			case 'm': 	if (1 != sscanf(opt_arg,"%lf", &Min_percentage)) {
+							fprintf(stderr, "wrong min. percentage\n");
+							exit(EXIT_FAILURE);
+						} else {
+							Min_percentage_use = TRUE;
+						}
+						break;
+			case 'g': 	if (1 != sscanf(opt_arg,"%ld", &Min_gamesplayed)) {
+							fprintf(stderr, "wrong min. games played\n");
+							exit(EXIT_FAILURE);
+						} else {
+							Min_gamesplayed_use = TRUE;
+						}
+						break;
 			case '?': 	parameter_error();
 						exit(EXIT_FAILURE);
 						break;
@@ -126,7 +213,7 @@ int main (int argc, char *argv[])
 	if (argc < 2) {
 		fprintf (stderr, "%s %s\n",proginfo_name(),proginfo_version());
 		fprintf (stderr, "%s", copyright_str);
-		fprintf (stderr, "for help type:\n%s -h\n\n", proginfo_name());		
+		fprintf (stderr, "for help type:\n%s -h\n\n", proginfo_name());
 		exit (EXIT_FAILURE);
 	}
 	if (help_mode) {
@@ -136,13 +223,17 @@ int main (int argc, char *argv[])
 		printf ("%s\n", copyright_str);
 		exit (EXIT_SUCCESS);
 	}
+	if (switch_mode && !help_mode) {
+		usage();
+		exit (EXIT_SUCCESS);
+	}
 	if ((argc - opt_index) > 1) {
 		/* too many parameters */
-		fprintf (stderr, "Extra parameters parameters present\n");
+		fprintf (stderr, "Extra parameters present\n");
 		exit(EXIT_FAILURE);
 	}
 	if (input_mode && argc != opt_index) {
-		fprintf (stderr, "Extra parameters parameters present\n");
+		fprintf (stderr, "Extra parameters present\n");
 		exit(EXIT_FAILURE);
 	}
 	if (!input_mode && argc == opt_index) {
@@ -151,10 +242,100 @@ int main (int argc, char *argv[])
 	}
 	/* get folder, should be only one at this point */
 	while (opt_index < argc ) {
-		f = argv[opt_index++];
+		inputf = argv[opt_index++];
 	}
 
-	main2(f);
+	//main2(f);
+
+
+	/*==== SET INPUT 1 ====*/
+	textf = NULL;
+	textf_opened = FALSE;
+	if (textstr == NULL) {
+		textf = stdout;
+	} else {
+		textf = fopen (textstr, "w");
+		if (textf == NULL) {
+			fprintf(stderr, "Errors with file: %s\n",textstr);			
+		} else {
+			textf_opened = TRUE;
+		}
+	}
+
+
+
+{
+
+	struct DATA *pdaba;
+	/*==== set input ====*/
+
+	if (NULL != (pdaba = database_init_frompgn(inputf, QUIET_MODE))) {
+		if (0 == pdaba->n_players || 0 == pdaba->n_games) {
+			fprintf (stderr, "ERROR: Input file contains no games\n");
+			return EXIT_FAILURE; 			
+		}
+	//	if (Ignore_draws) database_ignore_draws(pdaba);
+	} else {
+		fprintf (stderr, "Problems reading results from: %s\n", inputf);
+		return EXIT_FAILURE; 
+	}
+}
+
+
+
+	/*==== SET INPUT 2 ====*/
+
+#if 0
+	if (!pgn_getresults(inputf, QUIET_MODE)) {
+		printf ("Problems reading results from: %s\n", inputf);
+		return EXIT_FAILURE; 
+	}
+	
+	transform_DB(&DB, &Game_stats); /* convert DB to global variables */
+
+	// info output
+	if (!QUIET_MODE) {
+		printf ("Total games         %8ld\n", Game_stats.white_wins
+											 +Game_stats.draws
+											 +Game_stats.black_wins
+											 +Game_stats.noresult);
+		printf ("White wins          %8ld\n", Game_stats.white_wins);
+		printf ("Draws               %8ld\n", Game_stats.draws);
+		printf ("Black wins          %8ld\n", Game_stats.black_wins);
+		printf ("No result           %8ld\n", Game_stats.noresult);
+		printf ("\n");	
+	}
+#endif
+
+	/*==== CALCULATIONS ====*/
+
+	calc_perf();
+
+	if (Min_percentage_use) {
+		if (!QUIET_MODE) printf ("Exclude based on minimum percentage performance = %.2f%s\n",Min_percentage,"%");	
+		//discard_percmin(QUIET_MODE,Min_percentage/100);
+	}
+	if (Min_gamesplayed_use) {
+		if (!QUIET_MODE) printf ("Exclude if less than %ld games played\n",Min_gamesplayed);
+		//discard_playedmin(QUIET_MODE,Min_gamesplayed);
+	}
+	if (DISCARD_MODE) {
+		if (!QUIET_MODE) printf ("Exclude if performance is 'all wins' or 'all losses' (recursive)\n");
+		do {
+			calc_perf();
+		} while (discard(QUIET_MODE));
+	}
+
+
+//	discard_percmin(QUIET_MODE,Min_percentage/100);
+
+//	discard_playedmin(QUIET_MODE,Min_gamesplayed);
+
+	save2pgnf(textf);
+	
+	if (textf_opened) fclose (textf);
+
+	/*==== END CALCULATION ====*/
 
 	exit(EXIT_SUCCESS);
 }
@@ -193,3 +374,12 @@ usage (void)
 		, usage_options
 		, help_str);
 }
+
+/*
+|
+|	OTHER FUNCTIONS
+|
+\*--------------------------------------------------------------*/
+
+
+

@@ -76,7 +76,8 @@ $INCLUDE='-I myopt'
 $WARNINGS='-Wwrite-strings -Wconversion -Wshadow -Wparentheses -Wlogical-op -Wunused -Wmissing-prototypes -Wmissing-declarations -Wdeclaration-after-statement -W -Wall -Wextra'
 $OPT='-O3'
 $LIB='-lm'
-$SRC='main.c main2.c myopt/myopt.c proginfo.c'
+$SRC='main.c main2.c myopt/myopt.c proginfo.c pgnget.c mymem.c namehash.c'
+
 $EXE='-o ' + $NAME
 
 #=====================
