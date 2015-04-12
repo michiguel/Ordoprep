@@ -7,3 +7,6 @@ changename.rb
 gitstart.rb
 *.o
 myopt/*.o
+addgpl.rb
+gplnotice.txt
+sources.txt
