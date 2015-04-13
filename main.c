@@ -34,17 +34,22 @@
 
 #include "myopt.h"
 
-const char *license_str =
-"Copyright (c) 2015 Miguel A. Ballicora\n"
+const char *license_str = "\n"
+"   Copyright (c) 2015 Miguel A. Ballicora\n"
+"   Ordoprep is a program shrinking PGN files to get only results\n"
 "\n"
-"THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\n"
-"EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES\n"
-"OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND\n"
-"NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT\n"
-"HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\n"
-"WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\n"
-"FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR\n"
-"OTHER DEALINGS IN THE SOFTWARE."
+"   Ordoprep is free software: you can redistribute it and/or modify\n"
+"   it under the terms of the GNU General Public License as published by\n"
+"   the Free Software Foundation, either version 3 of the License, or\n"
+"   (at your option) any later version.\n"
+"\n"
+"   Ordoprep is distributed in the hope that it will be useful,\n"
+"   but WITHOUT ANY WARRANTY; without even the implied warranty of\n"
+"   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n"
+"   GNU General Public License for more details.\n"
+"\n"
+"   You should have received a copy of the GNU General Public License\n"
+"   along with Ordoprep.  If not, see <http://www.gnu.org/licenses/>.\n"
 ;
 
 static void parameter_error(void);
@@ -90,19 +95,13 @@ const char *OPTION_LIST = "vhHdm:g:p:qLo:";
 
 /*
 |
-|	TEMP
+|	VARIABLES
 |
 \*--------------------------------------------------------------*/
 
 static struct GAMES 		Games;
 static struct PLAYERS 		Players;
-static struct GAMESTATS	Game_stats;
-
-/*
-|
-|	ORDOPREP DEFINITIONS
-|
-\*--------------------------------------------------------------*/
+static struct GAMESTATS		Game_stats;
 
 static double 	Min_percentage  = 0.0;
 static long int	Min_gamesplayed = 0;
@@ -252,7 +251,6 @@ int main (int argc, char *argv[])
 
 	return ret;
 }
-
 
 /*--------------------------------------------------------------*\
 |
