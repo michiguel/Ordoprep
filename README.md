@@ -36,6 +36,26 @@ Other switches are available and information about them can be obtained by typin
 
 `ordoprep -h`
 
+```
+ quick example: ordoprep -p raw.pgn -o shrunk.pgn
+ Processes and shrinks input.pgn selecting only names and results
+ Output goes to output.pgn
+ if the swicth -o is not specified, the output goes to the screen
+
+
+usage: ordoprep [-OPTION]
+ -h        print this help
+ -H        print just the switches
+ -v        print version number and exit
+ -L        display the license information
+ -q        quiet (no screen progress updates)
+ -d        discard players with either all wins or all losses
+ -m <perf> discard players with a percentage performance lower than <perf>
+ -g <min>  discard players with less than <min> number of games played
+ -p <file> input file in PGN format
+ -o <file> output file (text format), goes to the screen if not present
+```
+
 ### Acknowledgments
 [Adam Hair](https://chessprogramming.wikispaces.com/Adam+Hair) has extensively tested and suggested valuable ideas.
 
