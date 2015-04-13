@@ -26,12 +26,11 @@
 #include "main2.h"
 #include "pgnget.h"
 #include "inidone.h"
+#include "mymem.h"
+#include "plyrs.h"
 
-// FIXME !!!!!
-#define MAXPLAYERS 50000
-
-static long	perf   [MAXPLAYERS]; // FIXME !!!!!
-static long	perfmax[MAXPLAYERS]; // FIXME !!!!!
+static long	*perf   ;
+static long	*perfmax;
 
 static void
 calc_perf (struct PLAYERS *pl, struct GAMES *gm)
@@ -204,8 +203,6 @@ save2pgnf(struct GAMES *gm, struct PLAYERS *pl, FILE *f)
 			}
 		}		
 
-
-
 	return;
 }
 
@@ -251,9 +248,20 @@ main2	( const char *inputf
 		if (!players_init (mpp, &Players)) {
 			games_done (&Games);
 			fprintf (stderr, "Could not initialize Players memory\n"); exit(EXIT_FAILURE);
-		} 
+		} else 
+		if (NULL == (perf    = memnew(sizeof(long)*(size_t)mpp))) {
+			players_done(&Players);
+			games_done (&Games);
+			fprintf (stderr, "Could not initialize memory for performance calculation\n"); exit(EXIT_FAILURE);
+		} else 
+		if (NULL == (perfmax = memnew(sizeof(long)*(size_t)mpp))) {
+			memrel(perf);
+			players_done(&Players);
+			games_done (&Games);
+			fprintf (stderr, "Could not initialize memory for max performance calculation\n"); exit(EXIT_FAILURE);
+		}
 	}
-	//assert(players_have_clear_flags(&Players));
+	assert(players_have_clear_flags(&Players));
 
 	database_transform (pdaba, &Games, &Players, &Game_stats); /* convert database to global variables */
 	if (0 == Games.n) {
