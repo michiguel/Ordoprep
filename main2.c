@@ -18,8 +18,6 @@
     along with ordoprep.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-
-
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -28,6 +26,154 @@
 #include "main2.h"
 #include "pgnget.h"
 #include "inidone.h"
+
+// FIXME !!!!!
+#define MAXPLAYERS 50000
+
+static long	perf   [MAXPLAYERS]; // FIXME !!!!!
+static long	perfmax[MAXPLAYERS]; // FIXME !!!!!
+
+static void
+calc_perf (struct PLAYERS *pl, struct GAMES *gm)
+{
+	player_t np = pl->n;
+	gamesnum_t ng = gm->n;
+	struct gamei *ga = gm->ga;
+
+	int s;
+	gamesnum_t i;
+	player_t j, w, b;
+
+	for (j = 0; j < np; j++) {
+		perf[j] = 0;	
+		perfmax[j] = 0;
+	}	
+
+	for (i = 0; i < ng; i++) {
+	
+		if (ga[i].score == DISCARD) continue;
+
+		w = ga[i].whiteplayer;
+		b = ga[i].blackplayer;
+		s = ga[i].score;		
+
+		if (s == WHITE_WIN) {
+			perf[w] += 2;
+		}
+		if (s == BLACK_WIN) {
+			perf[b] += 2;
+		}
+		if (s == RESULT_DRAW) {
+			perf[w] += 1;
+			perf[b] += 1;
+		}
+
+		perfmax[w] += 2;
+		perfmax[b] += 2;
+	}
+}
+
+static bool_t
+discard (bool_t quiet, struct PLAYERS *pl, struct GAMES *gm)
+{
+	player_t j;
+	gamesnum_t i;
+
+	long excluded = 0;
+	bool_t found  = FALSE;
+
+	gamesnum_t ng = gm->n;
+	const char  **name = pl->name;
+	struct gamei *ga = gm->ga;
+
+	for (j = 0; j < pl->n; j++) {
+		if (perfmax[j] == 0) continue;
+
+		found = perf[j] == perfmax[j] || perf[j] == 0;
+
+		if (found ) {
+			excluded++;
+			if (!quiet)	printf ("  %s\n",name[j]);
+			for (i = 0; i < ng; i++) {
+				if (ga[i].score == DISCARD) continue;
+				if (ga[i].whiteplayer == j || ga[i].blackplayer == j) {
+					ga[i].score = DISCARD;
+				}
+			}
+		}
+	}
+	printf ("\nExcluded: %ld\n", excluded);
+	return found;
+}
+
+static bool_t
+discard_percmin (bool_t quiet, double p, struct PLAYERS *pl, struct GAMES *gm)
+{
+	player_t j;
+	gamesnum_t i;
+
+	long excluded = 0;
+	bool_t found  = FALSE;
+
+	player_t np = pl->n;
+	gamesnum_t ng = gm->n;
+	const char  **name = pl->name;
+	struct gamei *ga = gm->ga;
+
+
+	for (j = 0; j < np; j++) {
+		if (perfmax[j] == 0) continue;
+
+		found = ((double)perf[j]/(double)perfmax[j]) < p;
+
+		if (found ) {
+			excluded++;
+			if (!quiet)	printf ("  %s\n",name[j]);
+			for (i = 0; i < ng; i++) {
+				if (ga[i].score == DISCARD) continue;
+				if (ga[i].whiteplayer == j || ga[i].blackplayer == j) {
+					ga[i].score = DISCARD;
+				}
+			}
+		}
+	}
+	printf ("\nExcluded: %ld\n", excluded);
+	return found;
+}
+
+static bool_t
+discard_playedmin (bool_t quiet, double p, struct PLAYERS *pl, struct GAMES *gm)
+{
+	player_t j;
+	gamesnum_t i;
+
+	long excluded = 0;
+	bool_t found  = FALSE;
+
+	player_t np = pl->n;
+	gamesnum_t ng = gm->n;
+	const char  **name = pl->name;
+	struct gamei *ga = gm->ga;
+
+	for (j = 0; j < np; j++) {
+		if (perfmax[j] == 0) continue;
+
+		found = perfmax[j] < (2*p); //perfmax wins count double
+
+		if (found ) {
+			excluded++;
+			if (!quiet)	printf ("  %s\n",name[j]);
+			for (i = 0; i < ng; i++) {
+				if (ga[i].score == DISCARD) continue;
+				if (ga[i].whiteplayer == j || ga[i].blackplayer == j) {
+					ga[i].score = DISCARD;
+				}
+			}
+		}
+	}
+	printf ("\nExcluded: %ld\n", excluded);
+	return found;
+}
 
 static void	
 save2pgnf(struct GAMES *gm, struct PLAYERS *pl, FILE *f)
@@ -61,16 +207,6 @@ save2pgnf(struct GAMES *gm, struct PLAYERS *pl, FILE *f)
 
 
 	return;
-}
-
-static void	calc_perf(void)
-{
-	return;
-}
-
-static bool_t discard(bool_t x)
-{
-	return FALSE;
 }
 
 
@@ -128,41 +264,36 @@ main2	( const char *inputf
 
 	// info output
 	if (!quietmode) {
-		printf ("Total games         %8ld\n", Game_stats.white_wins
-											 +Game_stats.draws
-											 +Game_stats.black_wins
-											 +Game_stats.noresult);
-		printf ("White wins          %8ld\n", Game_stats.white_wins);
-		printf ("Draws               %8ld\n", Game_stats.draws);
-		printf ("Black wins          %8ld\n", Game_stats.black_wins);
-		printf ("No result           %8ld\n", Game_stats.noresult);
+		printf ("Total games         %8ld\n", (long)Game_stats.white_wins
+											 +(long)Game_stats.draws
+											 +(long)Game_stats.black_wins
+											 +(long)Game_stats.noresult);
+		printf ("White wins          %8ld\n", (long)Game_stats.white_wins);
+		printf ("Draws               %8ld\n", (long)Game_stats.draws);
+		printf ("Black wins          %8ld\n", (long)Game_stats.black_wins);
+		printf ("No result           %8ld\n", (long)Game_stats.noresult);
 		printf ("\n");	
 	}
 
 
 	/*==== CALCULATIONS ====*/
 
-	calc_perf();
+	calc_perf(&Players, &Games);
 
 	if (Min_percentage_use) {
 		if (!quietmode) printf ("Exclude based on minimum percentage performance = %.2f%s\n",Min_percentage,"%");	
-		//discard_percmin(QUIET_MODE,Min_percentage/100);
+		discard_percmin (quietmode,Min_percentage/100, &Players, &Games);
 	}
 	if (Min_gamesplayed_use) {
 		if (!quietmode) printf ("Exclude if less than %ld games played\n",Min_gamesplayed);
-		//discard_playedmin(QUIET_MODE,Min_gamesplayed);
+		discard_playedmin(quietmode,(double)Min_gamesplayed, &Players, &Games);
 	}
 	if (DISCARD_MODE) {
 		if (!quietmode) printf ("Exclude if performance is 'all wins' or 'all losses' (recursive)\n");
 		do {
-			calc_perf();
-		} while (discard(quietmode));
+			calc_perf(&Players, &Games);
+		} while (discard(quietmode, &Players, &Games));
 	}
-
-
-//	discard_percmin(QUIET_MODE,Min_percentage/100);
-
-//	discard_playedmin(QUIET_MODE,Min_gamesplayed);
 
 	save2pgnf(&Games, &Players, textf);
 
