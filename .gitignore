@@ -10,3 +10,6 @@ myopt/*.o
 addgpl.rb
 gplnotice.txt
 sources.txt
+deploy-win.rb
+ordoprep-*
+
