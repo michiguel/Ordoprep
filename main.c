@@ -219,8 +219,7 @@ int main (int argc, char *argv[])
 		inputf = argv[opt_index++];
 	}
 
-
-	/*==== SET INPUT 1 ====*/
+	/*==== SET INPUT ====*/
 	textf = NULL;
 	textf_opened = FALSE;
 	if (textstr == NULL) {
@@ -267,7 +266,7 @@ static void parameter_error(void) {	printf ("Error in parameters\n"); return;}
 static void
 example (void)
 {
-	const char *example_options = "options...";
+	const char *example_options = "-p raw.pgn -o shrunk.pgn";
 	fprintf (stderr, "\n"
 		"quick example: %s %s\n"
 		"%s"
