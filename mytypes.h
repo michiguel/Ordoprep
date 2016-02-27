@@ -156,9 +156,10 @@ struct PLAYERS {
 	player_t	n; 
 	player_t	size;
 	player_t	anchored_n;
-	const char  **name;
 	bool_t		perf_set;
+	const char  **name;
 	bool_t		*flagged;
+	bool_t		*present_in_games;
 	bool_t		*prefed;
 	bool_t		*priored;
 	int			*performance_type; 
@@ -193,6 +194,17 @@ struct rel_prior_set {
 struct output_qualifiers {
 	bool_t  	mingames_set;
 	gamesnum_t	mingames; 
+};
+
+//
+struct OUT_INFO {
+	gamesnum_t 	W;
+	gamesnum_t 	D;
+	gamesnum_t 	L;
+	double		opprat; // opponent rating average
+	double		opperr; // opponent rating error average
+	player_t	n_opp;
+	double		diversity;
 };
 
 /*<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<*/

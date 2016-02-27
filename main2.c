@@ -29,6 +29,8 @@
 #include "mymem.h"
 #include "plyrs.h"
 
+#include "strlist.h"
+
 static long	*perf   ;
 static long	*perfmax;
 
@@ -221,12 +223,20 @@ main2	( const char *inputf
 		, FILE *textf
 )
 {
-
-
 	struct DATA *pdaba;
+	strlist_t SL;
+	strlist_t *psl = &SL;
+
 	/*==== set input ====*/
 
-	if (NULL != (pdaba = database_init_frompgn(inputf, quietmode))) {
+	strlist_init(psl);
+
+	if (!strlist_push(psl,inputf)) {
+		fprintf (stderr, "Lack of memory\n\n");
+		exit(EXIT_FAILURE);		
+	}
+
+	if (NULL != (pdaba = database_init_frompgn(psl, NULL, quietmode))) {
 		if (0 == pdaba->n_players || 0 == pdaba->n_games) {
 			fprintf (stderr, "ERROR: Input file contains no games\n");
 			return EXIT_FAILURE; 			
@@ -236,6 +246,8 @@ main2	( const char *inputf
 		fprintf (stderr, "Problems reading results from: %s\n", inputf);
 		return EXIT_FAILURE; 
 	}
+
+	strlist_done(psl);
 
 	/*==== memory initialization ====*/
 	{

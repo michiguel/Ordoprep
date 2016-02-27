@@ -71,6 +71,8 @@ static bool_t 	is_complete (struct pgn_result *p);
 static void 	pgn_result_reset (struct pgn_result *p);
 static bool_t 	pgn_result_collect (struct pgn_result *p, struct DATA *d);
 
+static void		syn_preload (bool_t quiet, const char *synfile_name, struct DATA *d);
+
 /*
 |
 |
@@ -170,21 +172,34 @@ structdata_done (struct DATA *d)
 |
 \*--------------------------------------------------------------*/
 
+#include "strlist.h"
+
 struct DATA *
-database_init_frompgn (const char *pgn, bool_t quiet)
+database_init_frompgn (strlist_t *sl, const char *synfile_name, bool_t quiet)
 {
 
 	struct DATA *pDAB = NULL;
 	FILE *fpgn;
 	bool_t ok = FALSE;
+	const char *pgn;
 
 	ok = NULL != (pDAB = structdata_init ());
 
-	if (ok) {
+	if (NULL != synfile_name) // not provided
+		syn_preload (quiet, synfile_name, pDAB); 
+
+	strlist_rwnd(sl);
+
+	pgn = strlist_next(sl);
+	while (ok && pgn) {
+		if (!quiet)	printf ("\nFile: %s\n",pgn);
 		if (NULL != (fpgn = fopen (pgn, "r"))) {
 			ok = fpgnscan (fpgn, quiet, pDAB);
 			fclose(fpgn);
+		} else {
+			ok = FALSE;
 		}
+		if (ok) pgn = strlist_next(sl);
 	}
 	return ok? pDAB: NULL;
 
@@ -218,6 +233,9 @@ database_transform(const struct DATA *db, struct GAMES *g, struct PLAYERS *p, st
 	player_t topn;
 	gamesnum_t gamestat[4] = {0,0,0,0};
 
+	assert(db && p && g && gs);
+	assert(p->name && p->flagged && p->present_in_games && p->prefed && p->priored && p->performance_type);
+
 	p->n = db->n_players; 
 	g->n = db->n_games; 
 
@@ -225,12 +243,15 @@ database_transform(const struct DATA *db, struct GAMES *g, struct PLAYERS *p, st
 	for (j = 0; j < topn; j++) {
 		p->name[j] = database_getname(db,j);
 		p->flagged[j] = FALSE;
+		p->present_in_games[j] = FALSE;
 		p->prefed [j] = FALSE;
 		p->priored[j] = FALSE;
 		p->performance_type[j] = PERF_NORMAL;
 	}
 
 {
+	player_t wp, bp;
+
 	size_t blk_filled  = db->gb_filled;
 	size_t blk;
 	size_t idx_last = db->gb_idx;
@@ -241,10 +262,16 @@ database_transform(const struct DATA *db, struct GAMES *g, struct PLAYERS *p, st
 
 		for (idx = 0; idx < MAXGAMESxBLOCK; idx++) {
 
-			g->ga[i].whiteplayer = db->gb[blk]->white[idx];
-			g->ga[i].blackplayer = db->gb[blk]->black[idx]; 
-			g->ga[i].score       = db->gb[blk]->score[idx];
+			g->ga[i].whiteplayer = wp = db->gb[blk]->white[idx];
+			g->ga[i].blackplayer = bp = db->gb[blk]->black[idx]; 
+			g->ga[i].score       =      db->gb[blk]->score[idx];
 			if (g->ga[i].score <= DISCARD) gamestat[g->ga[i].score]++;
+
+			if (g->ga[i].score != DISCARD) {
+				p->present_in_games[wp] = TRUE;
+				p->present_in_games[bp] = TRUE;
+			}
+			
 			i++;
 		}
 	
@@ -254,13 +281,18 @@ database_transform(const struct DATA *db, struct GAMES *g, struct PLAYERS *p, st
 
 		for (idx = 0; idx < idx_last; idx++) {
 
-			g->ga[i].whiteplayer = db->gb[blk]->white[idx];
-			g->ga[i].blackplayer = db->gb[blk]->black[idx]; 
-			g->ga[i].score       = db->gb[blk]->score[idx];
+			g->ga[i].whiteplayer = wp = db->gb[blk]->white[idx];
+			g->ga[i].blackplayer = bp = db->gb[blk]->black[idx]; 
+			g->ga[i].score       =      db->gb[blk]->score[idx];
 			if (g->ga[i].score <= DISCARD) gamestat[g->ga[i].score]++;
+
+			if (g->ga[i].score != DISCARD) {
+				p->present_in_games[wp] = TRUE;
+				p->present_in_games[bp] = TRUE;
+			}
+
 			i++;
 		}
-
 
 	if (i != db->n_games) {
 		fprintf (stderr, "Error, games not loaded propely\n");
@@ -306,6 +338,39 @@ database_ignore_draws (struct DATA *db)
 
 	return;
 }
+
+#include "bitarray.h"
+
+void 
+database_include_only (struct DATA *db, bitarray_t *pba)
+{
+	player_t wp, bp;
+	size_t blk;
+	size_t idx;
+	size_t blk_filled = db->gb_filled;
+	size_t idx_last   = db->gb_idx;
+
+	for (blk = 0; blk < blk_filled; blk++) {
+		for (idx = 0; idx < MAXGAMESxBLOCK; idx++) {
+			wp = db->gb[blk]->white[idx];
+			bp = db->gb[blk]->black[idx];
+			if (!ba_ison(pba, wp) || !ba_ison(pba, bp))
+				db->gb[blk]->score[idx] = DISCARD;
+		}
+	}
+
+	blk = blk_filled;
+
+		for (idx = 0; idx < idx_last; idx++) {
+			wp = db->gb[blk]->white[idx];
+			bp = db->gb[blk]->black[idx];
+			if (!ba_ison(pba, wp) || !ba_ison(pba, bp))
+				db->gb[blk]->score[idx] = DISCARD;
+		}
+
+	return;
+}
+
 
 /*--------------------------------------------------------------*\
 |
@@ -413,9 +478,192 @@ static void report_error (long int n)
 }
 
 
+#include "csv.h"
+static char *skipblanks(char *p) {while (isspace(*p)) p++; return p;}
+
+static bool_t
+syn_apply_pair (struct DATA *d, const char *m, const char *s)
+{
+	#define NOPLAYER -1
+	bool_t 		ok = TRUE;
+	player_t 	plyr_0 = NOPLAYER; // to silence warnings
+	player_t 	plyr_i = NOPLAYER; // to silence warnings
+	const char *tagstr;
+	uint32_t 	taghsh;
+
+	tagstr = m;
+	taghsh = namehash(tagstr);
+
+	if (ok && !name_ispresent (d, tagstr, taghsh, &plyr_0)) {
+		ok = addplayer (d, tagstr, &plyr_0) && name_register(taghsh,plyr_0,plyr_0);
+	}
+
+	tagstr = s;
+	taghsh = namehash(tagstr);
+
+	if (ok && !name_ispresent (d, tagstr, taghsh, &plyr_i)) {
+		ok = addplayer (d, tagstr, &plyr_i) && name_register(taghsh,plyr_i,plyr_0);
+	}
+
+	return ok;
+}
+
+static bool_t
+csvline_syn_apply (csv_line_t *pcsvln, struct DATA *d /*, bool_t quiet*/)
+{
+	bool_t ok = TRUE;
+	int i;
+	for (i = 1; ok && i < pcsvln->n; i++) {
+		// if (!quiet) printf ("[%s] synonym of [%s]\n",pcsvln->s[0],pcsvln->s[i]);
+		ok = ok && syn_apply_pair (d, pcsvln->s[0], pcsvln->s[i]);
+	}
+	return ok;
+}
+
+static void
+syn_preload (bool_t quietmode, const char *fsyns_name, struct DATA *d)
+{
+	FILE *fsyns;
+	char myline[MAXSIZE_CSVLINE];
+	char *p;
+	bool_t success;
+	bool_t line_success = TRUE;
+	bool_t file_success = TRUE;
+
+	assert(NULL != fsyns_name);
+
+	if (NULL == fsyns_name) {
+		fprintf (stderr, "Error, synonym file not provided, absent, or corrupted\n");
+		exit(EXIT_FAILURE);
+	}
+
+	if (NULL != (fsyns = fopen (fsyns_name, "r"))) {
+
+		csv_line_t csvln;
+		line_success = TRUE;
+		file_success = TRUE;
+
+		while ( line_success && 
+				file_success && 
+				NULL != fgets(myline, MAXSIZE_CSVLINE, fsyns)) {
+
+			success = FALSE;
+			p = myline;
+			p = skipblanks(p);
+
+			if (*p == '\0') continue;
+
+			if (csv_line_init(&csvln, myline)) {
+				if (csvln.n >= 1) {
+					success = csvline_syn_apply (&csvln, d /*, quietmode*/);
+				}
+				csv_line_done(&csvln);		
+			} else {
+				fprintf (stderr,"Failure to input synonym file\n");
+				exit(EXIT_FAILURE);
+			}
+			file_success = success;
+		}
+
+		fclose(fsyns);
+	}
+	else {
+		file_success = FALSE;
+	}
+
+	if (!file_success) {
+			fprintf (stderr, "Errors in file \"%s\"\n",fsyns_name);
+			exit(EXIT_FAILURE);
+	} else {
+		if (!quietmode)
+			printf ("Synonyms uploaded succesfully\n");
+	}
+	if (!line_success) {
+			fprintf (stderr, "Errors in file \"%s\" (not matching names)\n",fsyns_name);
+			exit(EXIT_FAILURE);
+	}
+	return;
+}
 
 
+//---- for name preload
 
+static bool_t
+name2player (const struct DATA *d, const char *namestr, player_t *plyr)
+{
+	player_t p = 0; // to silence warning
+	uint32_t hsh = namehash(namestr);
+	if (name_ispresent (d, namestr, hsh, &p)) {
+		*plyr = p;
+		return TRUE;
+	}
+	return FALSE;
+}
+
+static bool_t
+do_tick (const struct DATA *d, const char *namestr, bitarray_t *pba) 
+{
+	player_t p = 0; // to silence warnings
+	bool_t ok = name2player (d, namestr, &p);
+	if (ok)	ba_put (pba, p);
+	return ok;
+}
+
+void
+namelist_to_bitarray (bool_t quietmode, const char *finp_name, const struct DATA *d, bitarray_t *pba)
+{
+	FILE *finp;
+	char myline[MAXSIZE_CSVLINE];
+	char *p;
+	bool_t line_success = TRUE;
+	bool_t file_success = TRUE;
+
+	assert (pba);
+	assert (d);
+
+	ba_clear (pba);
+
+	if (NULL == finp_name) {
+		return;
+	}
+
+	if (NULL != (finp = fopen (finp_name, "r"))) {
+
+		csv_line_t csvln;
+		line_success = TRUE;
+
+		while ( line_success && NULL != fgets(myline, MAXSIZE_CSVLINE, finp)) {
+
+			p = skipblanks(myline);
+			if (*p == '\0') continue;
+
+			if (csv_line_init(&csvln, myline)) {
+				line_success = csvln.n == 1 && do_tick (d, csvln.s[0], pba);
+				csv_line_done(&csvln);		
+			} else {
+				line_success = FALSE;
+			}
+		}
+
+		fclose(finp);
+	} else {
+		file_success = FALSE;
+	}
+
+	if (!file_success) {
+		fprintf (stderr, "Errors in file \"%s\"\n",finp_name);
+		exit(EXIT_FAILURE);
+	} else 
+	if (!line_success) {
+		fprintf (stderr, "Errors in file \"%s\" (not matching names)\n",finp_name);
+		exit(EXIT_FAILURE);
+	} 
+	if (!quietmode)	printf ("Names uploaded succesfully\n");
+
+	return;
+}
+
+//--------------------------------------
 
 static void
 pgn_result_reset (struct pgn_result *p)
@@ -443,7 +691,7 @@ pgn_result_collect (struct pgn_result *p, struct DATA *d)
 	taghsh = namehash(tagstr);
 
 	if (ok && !name_ispresent (d, tagstr, taghsh, &plyr)) {
-		ok = addplayer (d, tagstr, &plyr) && name_register(taghsh,plyr);
+		ok = addplayer (d, tagstr, &plyr) && name_register(taghsh,plyr,plyr);
 	}
 	i = plyr;
 
@@ -451,7 +699,7 @@ pgn_result_collect (struct pgn_result *p, struct DATA *d)
 	taghsh = namehash(tagstr);
 
 	if (ok && !name_ispresent (d, tagstr, taghsh, &plyr)) {
-		ok = addplayer (d, tagstr, &plyr) && name_register(taghsh,plyr);
+		ok = addplayer (d, tagstr, &plyr) && name_register(taghsh,plyr,plyr);
 	}
 	j = plyr;
 
@@ -535,7 +783,7 @@ fpgnscan (FILE *fpgn, bool_t quiet, struct DATA *d)
 		return FALSE;
 
 	if (!quiet) 
-		printf("\nLoading data (%d games x dot): \n\n",games_x_dot); fflush(stdout);
+		printf("Loading data (%d games x dot): \n\n",games_x_dot); fflush(stdout);
 
 	pgn_result_reset  (&result);
 

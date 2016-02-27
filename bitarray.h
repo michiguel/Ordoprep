@@ -19,18 +19,27 @@
 */
 
 
-#if !defined(H_NMHASH)
-#define H_NMHASH
+#if !defined(H_BITARRAY)
+#define H_BITARRAY
 /*>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>*/
 
-#include "boolean.h"
-#include "datatype.h"
+#include "mytypes.h"
 
-extern bool_t	name_storage_init(void);
-extern void 	name_storage_done(void);
-extern bool_t 	name_ispresent (const struct DATA *d, const char *s, uint32_t hash, /*out*/ player_t *out_index);
-extern bool_t 	name_register (uint32_t hash, player_t i, player_t i_out);
-extern uint32_t namehash(const char *str);
+typedef uint64_t pod_t;
+
+struct BITARRAY {
+	pod_t *		pod;
+	player_t 	max;
+};
+
+typedef struct BITARRAY bitarray_t;
+
+extern void 	ba_put(struct BITARRAY *ba, player_t x);
+extern bool_t 	ba_ison(struct BITARRAY *ba, player_t x);
+extern void 	ba_clear (struct BITARRAY *ba);
+extern void		ba_setnot (struct BITARRAY *ba);
+extern bool_t 	ba_init(struct BITARRAY *ba, player_t max);
+extern void 	ba_done(struct BITARRAY *ba);
 
 /*<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<*/
 #endif

@@ -19,18 +19,36 @@
 */
 
 
-#if !defined(H_NMHASH)
-#define H_NMHASH
+#if !defined(H_STRLIST)
+#define H_STRLIST
 /*>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>*/
 
 #include "boolean.h"
-#include "datatype.h"
 
-extern bool_t	name_storage_init(void);
-extern void 	name_storage_done(void);
-extern bool_t 	name_ispresent (const struct DATA *d, const char *s, uint32_t hash, /*out*/ player_t *out_index);
-extern bool_t 	name_register (uint32_t hash, player_t i, player_t i_out);
-extern uint32_t namehash(const char *str);
+struct STRNODE;
+
+struct STRNODE {
+	char *str;
+	struct STRNODE *nxt;	
+};
+
+typedef struct STRNODE strnode_t;
+
+struct STRLIST {
+	strnode_t prehead;
+	strnode_t *curr;
+	strnode_t *last;
+};
+
+typedef struct STRLIST strlist_t;
+
+//-------------------------------------------------
+
+extern bool_t 		strlist_init (strlist_t *sl);
+extern void 		strlist_done (strlist_t *sl);
+extern bool_t 		strlist_push (strlist_t *sl, const char *s);
+extern void 		strlist_rwnd (strlist_t *sl);
+extern const char *	strlist_next (strlist_t *sl);
 
 /*<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<*/
 #endif

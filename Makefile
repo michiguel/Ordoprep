@@ -5,9 +5,9 @@ OPT = -O3
 LIBFLAGS = -lm
 EXE = ordoprep
 
-SRC = main.c main2.c myopt/myopt.c proginfo.c pgnget.c mymem.c namehash.c inidone.c 
-DEPS = bool_t.h  main2.h  proginfo.h  progname.h  version.h pgnget.h mymem.h namehash.h inidone.h
-OBJ = main.o main2.o myopt/myopt.o proginfo.o pgnget.o mymem.o namehash.o inidone.o
+SRC = main.c main2.c myopt/myopt.c proginfo.c pgnget.c mymem.c namehash.c inidone.c bitarray.c strlist.c csv.c
+DEPS = bool_t.h  main2.h  proginfo.h  progname.h  version.h pgnget.h mymem.h namehash.h inidone.h bitarray.h strlist.h csv.h
+OBJ = main.o main2.o myopt/myopt.o proginfo.o pgnget.o mymem.o namehash.o inidone.o bitarray.o strlist.o csv.o
 
 %.o: %.c $(DEPS)
 	$(CC) -c -o $@ $< $(CFLAGS)
