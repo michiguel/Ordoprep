@@ -117,40 +117,7 @@ static bool_t 	Min_percentage_use = FALSE;
 |
 \*--------------------------------------------------------------*/
 
-#include "csv.h"
-
-static char *skipblanks(char *p) {while (isspace(*p)) p++; return p;}
-
-static bool_t
-strlist_multipush (strlist_t *sl, const char *finp_name)
-{		
-	csv_line_t csvln;
-	FILE *finp;
-	char myline[MAXSIZE_CSVLINE];
-	char *p;
-	bool_t line_success = TRUE;
-
-	if (NULL == finp_name || NULL == (finp = fopen (finp_name, "r"))) {
-		return FALSE;
-	}
-
-	while (line_success && NULL != fgets(myline, MAXSIZE_CSVLINE, finp)) {
-
-		p = skipblanks(myline);
-		if (*p == '\0') continue;
-
-		if (csv_line_init(&csvln, myline)) {
-			line_success = csvln.n == 1 && strlist_push (sl, csvln.s[0]);
-			csv_line_done(&csvln);		
-		} else {
-			line_success = FALSE;
-		}
-	}
-
-	fclose(finp);
-
-	return line_success;
-}
+static bool_t strlist_multipush (strlist_t *sl, const char *finp_name);
 
 
 int main (int argc, char *argv[])
@@ -350,4 +317,42 @@ usage (void)
 		, usage_options
 		, help_str);
 }
+
+//--- multipush
+
+#include "csv.h"
+
+static char *skipblanks(char *p) {while (isspace(*p)) p++; return p;}
+
+static bool_t
+strlist_multipush (strlist_t *sl, const char *finp_name)
+{		
+	csv_line_t csvln;
+	FILE *finp;
+	char myline[MAXSIZE_CSVLINE];
+	char *p;
+	bool_t line_success = TRUE;
+
+	if (NULL == finp_name || NULL == (finp = fopen (finp_name, "r"))) {
+		return FALSE;
+	}
+
+	while (line_success && NULL != fgets(myline, MAXSIZE_CSVLINE, finp)) {
+
+		p = skipblanks(myline);
+		if (*p == '\0') continue;
+
+		if (csv_line_init(&csvln, myline)) {
+			line_success = csvln.n == 1 && strlist_push (sl, csvln.s[0]);
+			csv_line_done(&csvln);		
+		} else {
+			line_success = FALSE;
+		}
+	}
+
+	fclose(finp);
+
+	return line_success;
+}
+
 
