@@ -88,12 +88,13 @@ static void usage (void);
 		" -m <perf> discard players with a percentage performance lower than <perf>\n"
 		" -g <min>  discard players with less than <min> number of games played\n"
 		" -p <file> input file in PGN format\n"
+		" -P <file> text file containing a list of PGN file names (multiple input)\n"
 		" -o <file> output file (text format), goes to the screen if not present\n"
 		"\n"
 	/*	 ....5....|....5....|....5....|....5....|....5....|....5....|....5....|....5....|*/
 		;
 
-const char *OPTION_LIST = "vhHdm:g:p:qLo:";
+const char *OPTION_LIST = "vhHdm:g:p:P:qLo:";
 
 /*
 |
@@ -115,6 +116,42 @@ static bool_t 	Min_percentage_use = FALSE;
 |	MAIN
 |
 \*--------------------------------------------------------------*/
+
+#include "csv.h"
+
+static char *skipblanks(char *p) {while (isspace(*p)) p++; return p;}
+
+static bool_t
+strlist_multipush (strlist_t *sl, const char *finp_name)
+{		
+	csv_line_t csvln;
+	FILE *finp;
+	char myline[MAXSIZE_CSVLINE];
+	char *p;
+	bool_t line_success = TRUE;
+
+	if (NULL == finp_name || NULL == (finp = fopen (finp_name, "r"))) {
+		return FALSE;
+	}
+
+	while (line_success && NULL != fgets(myline, MAXSIZE_CSVLINE, finp)) {
+
+		p = skipblanks(myline);
+		if (*p == '\0') continue;
+
+		if (csv_line_init(&csvln, myline)) {
+			line_success = csvln.n == 1 && strlist_push (sl, csvln.s[0]);
+			csv_line_done(&csvln);		
+		} else {
+			line_success = FALSE;
+		}
+	}
+
+	fclose(finp);
+
+	return line_success;
+}
+
 
 int main (int argc, char *argv[])
 {
@@ -152,6 +189,9 @@ int main (int argc, char *argv[])
 			case 'H':	switch_mode = TRUE;		break;
 			case 'p': 	input_mode = TRUE;
 					 	single_pgn = opt_arg;
+						break;
+			case 'P': 	input_mode = TRUE;
+					 	multi_pgn = opt_arg;
 						break;
 			case 'o': 	textstr = opt_arg;
 						break;
