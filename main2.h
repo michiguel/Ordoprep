@@ -24,10 +24,12 @@
 /*>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>*/
 
 #include "mytypes.h"
+#include "strlist.h"
+
 
 extern 
 int 
-main2	( const char *inputf
+main2	( strlist_t *psl
 		, bool_t quietmode
 		, struct GAMES Games
 		, struct PLAYERS Players

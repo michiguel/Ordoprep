@@ -210,7 +210,7 @@ save2pgnf(struct GAMES *gm, struct PLAYERS *pl, FILE *f)
 
 
 int 
-main2	( const char *inputf
+main2	( strlist_t *psl
 		, bool_t quietmode
 		, struct GAMES Games
 		, struct PLAYERS Players
@@ -224,17 +224,8 @@ main2	( const char *inputf
 )
 {
 	struct DATA *pdaba;
-	strlist_t SL;
-	strlist_t *psl = &SL;
 
 	/*==== set input ====*/
-
-	strlist_init(psl);
-
-	if (!strlist_push(psl,inputf)) {
-		fprintf (stderr, "Lack of memory\n\n");
-		exit(EXIT_FAILURE);		
-	}
 
 	if (NULL != (pdaba = database_init_frompgn(psl, NULL, quietmode))) {
 		if (0 == pdaba->n_players || 0 == pdaba->n_games) {
@@ -243,11 +234,9 @@ main2	( const char *inputf
 		}
 	//	if (Ignore_draws) database_ignore_draws(pdaba);
 	} else {
-		fprintf (stderr, "Problems reading results from: %s\n", inputf);
+		fprintf (stderr, "Problems reading results from\n");
 		return EXIT_FAILURE; 
 	}
-
-	strlist_done(psl);
 
 	/*==== memory initialization ====*/
 	{

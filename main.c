@@ -26,6 +26,8 @@
 #include "main2.h"
 #include "inidone.h"
 
+#include "strlist.h"
+
 /*
 |
 |	GENERAL OPTIONS
@@ -116,13 +118,16 @@ static bool_t 	Min_percentage_use = FALSE;
 
 int main (int argc, char *argv[])
 {
+	strlist_t SL;
+	strlist_t *psl = &SL;
+
 	int ret;
 
 	bool_t textf_opened;
 	FILE *textf;
 
 	int op;
-	const char *inputf, *textstr;
+	const char *single_pgn, *multi_pgn, *textstr;
 	int version_mode, help_mode, switch_mode, license_mode, input_mode;
 
 	/* defaults */
@@ -133,7 +138,8 @@ int main (int argc, char *argv[])
 	input_mode   = FALSE;
 	QUIET_MODE   = FALSE;
 	DISCARD_MODE = FALSE;
-	inputf       = NULL;
+	single_pgn   = NULL;
+	multi_pgn    = NULL;
 	textstr 	 = NULL;
 
 	while (END_OF_OPTIONS != (op = options (argc, argv, OPTION_LIST))) {
@@ -145,7 +151,7 @@ int main (int argc, char *argv[])
 			case 'h':	help_mode = TRUE;		break;
 			case 'H':	switch_mode = TRUE;		break;
 			case 'p': 	input_mode = TRUE;
-					 	inputf = opt_arg;
+					 	single_pgn = opt_arg;
 						break;
 			case 'o': 	textstr = opt_arg;
 						break;
@@ -200,25 +206,39 @@ int main (int argc, char *argv[])
 		usage();
 		exit (EXIT_SUCCESS);
 	}
-	if ((argc - opt_index) > 1) {
-		/* too many parameters */
-		fprintf (stderr, "Extra parameters present\n");
-		exit(EXIT_FAILURE);
-	}
-	if (input_mode && argc != opt_index) {
-		fprintf (stderr, "Extra parameters present\n");
-		exit(EXIT_FAILURE);
-	}
 	if (!input_mode && argc == opt_index) {
 		fprintf (stderr, "Need file name to proceed\n");
 		exit(EXIT_FAILURE);
 	}
-	/* get folder, should be only one at this point */
-	while (opt_index < argc ) {
-		inputf = argv[opt_index++];
+
+
+	strlist_init(psl);
+
+	/* -------- input files, remaining args --------- */
+
+	if (single_pgn) {
+		if (!strlist_push(psl,single_pgn)) {
+			fprintf (stderr, "Lack of memory\n\n");
+			exit(EXIT_FAILURE);		
+		}
 	}
 
-	/*==== SET INPUT ====*/
+	if (multi_pgn) {
+		if (!strlist_multipush (psl, multi_pgn)) {
+			fprintf (stderr, "Errors in file \"%s\", or lack of memory\n", multi_pgn);
+			exit(EXIT_FAILURE);
+		}
+	}
+
+	while (opt_index < argc) {
+		if (!strlist_push(psl,argv[opt_index++])) {
+			fprintf (stderr, "Too many input files\n\n");
+			exit(EXIT_FAILURE);
+		}
+	}
+
+	/*---- set output ----*/
+
 	textf = NULL;
 	textf_opened = FALSE;
 	if (textstr == NULL) {
@@ -232,7 +252,9 @@ int main (int argc, char *argv[])
 		}
 	}
 
-	ret = main2	( inputf
+	/*--------------------*/
+
+	ret = main2	( psl
 				, QUIET_MODE
 				, Games
 				, Players
@@ -244,8 +266,11 @@ int main (int argc, char *argv[])
 				, DISCARD_MODE
 				, textf);
 
+	/*--------------------*/
 	
 	if (textf_opened) fclose (textf);
+
+	strlist_done(psl);
 
 	/*==== END CALCULATION ====*/
 
