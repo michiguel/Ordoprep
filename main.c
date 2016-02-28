@@ -69,30 +69,30 @@ static void usage (void);
 		;
 
 	static const char *intro_str =
-		"PGN file to only results\n"
+		"Full PGN file to \"only results\"\n"
 		;
 
 	static const char *example_str =
-		" Processes and shrinks input.pgn selecting only names and results\n"
-		" Output goes to output.pgn\n"
-		" if the swicth -o is not specified, the output goes to the screen\n"
+		"  Processes and shrinks input.pgn selecting only names and results\n"
+		"  stripping it from moves and comments. Output goes to shrunk.pgn\n"
+		"  if the swicth -o is not specified, the output goes to the screen\n"
 		;
 
 	static const char *help_str =
-		" -h        print this help\n"
-		" -H        print just the switches\n"
-		" -v        print version number and exit\n"
-		" -L        display the license information\n"
-		" -q        quiet (no screen progress updates)\n"
-		" -d        discard players with either all wins or all losses\n"
-		" -m <perf> discard players with a percentage performance lower than <perf>\n"
-		" -g <min>  discard players with less than <min> number of games played\n"
-		" -p <file> input file in PGN format\n"
-		" -P <file> text file containing a list of PGN file names (multiple input)\n"
-		" -Y <file> name synonyms (csv format). Each line: main,syn1,syn2 etc.\n"
-		" -i <file> include only games of participants present in <file>\n"
-		" -x <file> names in <file> will not have their games included\n"
-		" -o <file> output file (text format), goes to the screen if not present\n"
+		" -h         print this help\n"
+		" -H         print just the switches\n"
+		" -v         print version number and exit\n"
+		" -L         display the license information\n"
+		" -q         quiet (no screen progress updates)\n"
+		" -d         discard players with either all wins or all losses\n"
+		" -m <perf>  discard players with a percentage performance lower than <perf>\n"
+		" -g <min>   discard players with less than <min> number of games played\n"
+		" -p <file>  input file in PGN format\n"
+		" -P <file>  text file containing a list of PGN file names (multiple input)\n"
+		" -Y <file>  name synonyms (csv format). Each line: main,syn1,syn2 etc.\n"
+		" -i <file>  include only games of participants present in <file>\n"
+		" -x <file>  names in <file> will not have their games included\n"
+		" -o <file>  output file (text format), goes to the screen if not present\n"
 		"\n"
 	/*	 ....5....|....5....|....5....|....5....|....5....|....5....|....5....|....5....|*/
 		;
