@@ -1,6 +1,6 @@
 /*
 	ordoprep is program for preparing/compacting input for Ordo
-    Copyright 2015 Miguel A. Ballicora
+    Copyright 2016 Miguel A. Ballicora
 
     This file is part of ordoprep.
 
@@ -37,7 +37,7 @@
 #include "myopt.h"
 
 const char *license_str = "\n"
-"   Copyright (c) 2015 Miguel A. Ballicora\n"
+"   Copyright (c) 2016 Miguel A. Ballicora\n"
 "   Ordoprep is a program shrinking PGN files to get only results\n"
 "\n"
 "   Ordoprep is free software: you can redistribute it and/or modify\n"
@@ -64,7 +64,7 @@ static void usage (void);
 	static bool_t DISCARD_MODE;
 
 	static const char *copyright_str = 
-		"Copyright (c) 2015 Miguel A. Ballicora\n"
+		"Copyright (c) 2016 Miguel A. Ballicora\n"
 		"There is NO WARRANTY of any kind\n"
 		;
 
@@ -84,7 +84,7 @@ static void usage (void);
 		" -v         print version number and exit\n"
 		" -L         display the license information\n"
 		" -q         quiet (no screen progress updates)\n"
-		" -d         discard players with either all wins or all losses\n"
+		" -d         discard players with no wins or no losses\n"
 		" -m <perf>  discard players with a percentage performance lower than <perf>\n"
 		" -g <min>   discard players with less than <min> number of games played\n"
 		" -p <file>  input file in PGN format\n"
@@ -92,7 +92,7 @@ static void usage (void);
 		" -Y <file>  name synonyms (csv format). Each line: main,syn1,syn2 etc.\n"
 		" -i <file>  include only games of participants present in <file>\n"
 		" -x <file>  names in <file> will not have their games included\n"
-		" -o <file>  output file (text format), goes to the screen if not present\n"
+		" -o <file>  output file (text format). If absent, output goes to the screen\n"
 		"\n"
 	/*	 ....5....|....5....|....5....|....5....|....5....|....5....|....5....|....5....|*/
 		;
