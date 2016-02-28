@@ -40,6 +40,7 @@ main2	( strlist_t *psl
 		, bool_t Min_percentage_use
 		, bool_t DISCARD_MODE
 		, FILE *textf
+		, const char *synstr
 );
 
 /*<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<*/

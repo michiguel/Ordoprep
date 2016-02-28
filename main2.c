@@ -221,20 +221,21 @@ main2	( strlist_t *psl
 		, bool_t Min_percentage_use
 		, bool_t DISCARD_MODE
 		, FILE *textf
+		, const char *synstr
 )
 {
 	struct DATA *pdaba;
 
 	/*==== set input ====*/
 
-	if (NULL != (pdaba = database_init_frompgn(psl, NULL, quietmode))) {
+	if (NULL != (pdaba = database_init_frompgn(psl, synstr, quietmode))) {
 		if (0 == pdaba->n_players || 0 == pdaba->n_games) {
 			fprintf (stderr, "ERROR: Input file contains no games\n");
 			return EXIT_FAILURE; 			
 		}
 	//	if (Ignore_draws) database_ignore_draws(pdaba);
 	} else {
-		fprintf (stderr, "Problems reading results from\n");
+		fprintf (stderr, "Problems reading results from pgn file\n");
 		return EXIT_FAILURE; 
 	}
 

@@ -89,12 +89,13 @@ static void usage (void);
 		" -g <min>  discard players with less than <min> number of games played\n"
 		" -p <file> input file in PGN format\n"
 		" -P <file> text file containing a list of PGN file names (multiple input)\n"
+		" -Y <file> name synonyms (csv format). Each line: main,syn1,syn2 etc.\n"
 		" -o <file> output file (text format), goes to the screen if not present\n"
 		"\n"
 	/*	 ....5....|....5....|....5....|....5....|....5....|....5....|....5....|....5....|*/
 		;
 
-const char *OPTION_LIST = "vhHdm:g:p:P:qLo:";
+const char *OPTION_LIST = "vhHdm:g:p:P:qLo:Y:";
 
 /*
 |
@@ -131,7 +132,7 @@ int main (int argc, char *argv[])
 	FILE *textf;
 
 	int op;
-	const char *single_pgn, *multi_pgn, *textstr;
+	const char *single_pgn, *multi_pgn, *textstr, *synstr;
 	int version_mode, help_mode, switch_mode, license_mode, input_mode;
 
 	/* defaults */
@@ -144,6 +145,7 @@ int main (int argc, char *argv[])
 	DISCARD_MODE = FALSE;
 	single_pgn   = NULL;
 	multi_pgn    = NULL;
+	synstr		 = NULL;
 	textstr 	 = NULL;
 
 	while (END_OF_OPTIONS != (op = options (argc, argv, OPTION_LIST))) {
@@ -159,6 +161,8 @@ int main (int argc, char *argv[])
 						break;
 			case 'P': 	input_mode = TRUE;
 					 	multi_pgn = opt_arg;
+						break;
+			case 'Y': 	synstr = opt_arg;
 						break;
 			case 'o': 	textstr = opt_arg;
 						break;
@@ -271,7 +275,9 @@ int main (int argc, char *argv[])
 				, Min_gamesplayed_use
 				, Min_percentage_use
 				, DISCARD_MODE
-				, textf);
+				, textf
+				, synstr
+				);
 
 	/*--------------------*/
 	
@@ -321,6 +327,7 @@ usage (void)
 //--- multipush
 
 #include "csv.h"
+#include <ctype.h>
 
 static char *skipblanks(char *p) {while (isspace(*p)) p++; return p;}
 
