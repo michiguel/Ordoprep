@@ -41,6 +41,8 @@ main2	( strlist_t *psl
 		, bool_t DISCARD_MODE
 		, FILE *textf
 		, const char *synstr
+		, const char *includes_str
+		, const char *excludes_str
 );
 
 /*<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<*/

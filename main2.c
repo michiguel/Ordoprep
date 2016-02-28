@@ -222,9 +222,13 @@ main2	( strlist_t *psl
 		, bool_t DISCARD_MODE
 		, FILE *textf
 		, const char *synstr
+		, const char *includes_str
+		, const char *excludes_str
 )
 {
 	struct DATA *pdaba;
+
+
 
 	/*==== set input ====*/
 
@@ -233,7 +237,32 @@ main2	( strlist_t *psl
 			fprintf (stderr, "ERROR: Input file contains no games\n");
 			return EXIT_FAILURE; 			
 		}
+
 	//	if (Ignore_draws) database_ignore_draws(pdaba);
+
+		if (NULL != includes_str) {
+			bitarray_t ba;
+			if (ba_init (&ba,pdaba->n_players)) {
+				namelist_to_bitarray (quietmode, includes_str, pdaba, &ba);
+				database_include_only(pdaba, &ba);
+			} else {
+				fprintf (stderr, "ERROR\n");
+				exit(EXIT_FAILURE);
+			}
+		}
+		if (NULL != excludes_str) {
+			bitarray_t ba;
+			if (ba_init (&ba,pdaba->n_players)) {
+				namelist_to_bitarray (quietmode, excludes_str, pdaba, &ba);
+				ba_setnot(&ba);
+				database_include_only(pdaba, &ba);
+			} else {
+				fprintf (stderr, "ERROR\n");
+				exit(EXIT_FAILURE);
+			}
+		}
+
+
 	} else {
 		fprintf (stderr, "Problems reading results from pgn file\n");
 		return EXIT_FAILURE; 

@@ -90,12 +90,14 @@ static void usage (void);
 		" -p <file> input file in PGN format\n"
 		" -P <file> text file containing a list of PGN file names (multiple input)\n"
 		" -Y <file> name synonyms (csv format). Each line: main,syn1,syn2 etc.\n"
+		" -i <file> include only games of participants present in <file>\n"
+		" -x <file> names in <file> will not have their games included\n"
 		" -o <file> output file (text format), goes to the screen if not present\n"
 		"\n"
 	/*	 ....5....|....5....|....5....|....5....|....5....|....5....|....5....|....5....|*/
 		;
 
-const char *OPTION_LIST = "vhHdm:g:p:P:qLo:Y:";
+const char *OPTION_LIST = "vhHdm:g:p:P:qLo:Y:i:x:";
 
 /*
 |
@@ -132,7 +134,7 @@ int main (int argc, char *argv[])
 	FILE *textf;
 
 	int op;
-	const char *single_pgn, *multi_pgn, *textstr, *synstr;
+	const char *single_pgn, *multi_pgn, *textstr, *synstr, *excludes_str, *includes_str;
 	int version_mode, help_mode, switch_mode, license_mode, input_mode;
 
 	/* defaults */
@@ -146,6 +148,8 @@ int main (int argc, char *argv[])
 	single_pgn   = NULL;
 	multi_pgn    = NULL;
 	synstr		 = NULL;
+	excludes_str = NULL;
+	includes_str = NULL;
 	textstr 	 = NULL;
 
 	while (END_OF_OPTIONS != (op = options (argc, argv, OPTION_LIST))) {
@@ -163,6 +167,10 @@ int main (int argc, char *argv[])
 					 	multi_pgn = opt_arg;
 						break;
 			case 'Y': 	synstr = opt_arg;
+						break;
+			case 'i': 	includes_str = opt_arg;
+						break;
+			case 'x': 	excludes_str = opt_arg;
 						break;
 			case 'o': 	textstr = opt_arg;
 						break;
@@ -222,6 +230,10 @@ int main (int argc, char *argv[])
 		exit(EXIT_FAILURE);
 	}
 
+	if (includes_str && excludes_str) {
+		fprintf (stderr, "Switches -x and -i cannot be used at the same time\n\n");
+		exit(EXIT_FAILURE);
+	}	
 
 	strlist_init(psl);
 
@@ -277,6 +289,8 @@ int main (int argc, char *argv[])
 				, DISCARD_MODE
 				, textf
 				, synstr
+				, includes_str
+				, excludes_str
 				);
 
 	/*--------------------*/
