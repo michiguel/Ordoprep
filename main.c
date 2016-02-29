@@ -81,10 +81,6 @@ static struct option long_options[] = {
 	{0,         		0,                 0,   0 	}
 };
 
-static int longoidx;
-
-/* VARIABLES */
-
 	static bool_t QUIET_MODE;
 	static bool_t DISCARD_MODE;
 
@@ -102,25 +98,6 @@ static int longoidx;
 		"  stripping it from moves and comments. Output goes to shrunk.pgn\n"
 		"  if the swicth -o is not specified, the output goes to the screen\n"
 		;
-
-#if 0
-	static const char *help_str =
-		" -h         print this help\n"
-		" -H         print just the switches\n"
-		" -v         print version number and exit\n"
-		" -L         display the license information\n"
-		" -q         quiet (no screen progress updates)\n"
-		" -d         discard players with no wins or no losses\n"
-		" -m <perf>  discard players with a percentage performance lower than <perf>\n"
-		" -g <min>   discard players with less than <min> number of games played\n"
-		" -p <file>  input file in PGN format\n"
-		" -P <file>  text file containing a list of PGN file names (multiple input)\n"
-		" -Y <file>  name synonyms (csv format). Each line: main,syn1,syn2 etc.\n"
-		" -i <file>  include only games of participants present in <file>\n"
-		" -x <file>  names in <file> will not have their games included\n"
-		" -o <file>  output file (text format). If absent, output goes to the screen\n"
-		"\n"
-#endif
 
 	/*	 ....5....|....5....|....5....|....5....|....5....|....5....|....5....|....5....|*/
 		;
@@ -141,8 +118,6 @@ static double 	Min_percentage  = 0.0;
 static long int	Min_gamesplayed = 0;
 static bool_t	Min_gamesplayed_use = FALSE;
 static bool_t 	Min_percentage_use = FALSE;
-
-
 
 //
 
@@ -238,7 +213,6 @@ struct helpline SH[] = {
 	required_argument,
 	"FILE",
 	"output file (text format). Default output goes to screen"},
-//
 
 {	0,
 	NULL,
@@ -297,6 +271,8 @@ int main (int argc, char *argv[])
 	FILE *textf;
 
 	int op;
+	int longoidx;
+
 	const char *single_pgn, *multi_pgn, *textstr, *synstr, *excludes_str, *includes_str;
 	int version_mode, help_mode, switch_mode, license_mode, input_mode;
 
@@ -317,7 +293,6 @@ int main (int argc, char *argv[])
 
 	while (END_OF_OPTIONS != (op = options_l (argc, argv, OPTION_LIST, long_options, &longoidx))) {
 
-//	while (END_OF_OPTIONS != (op = options (argc, argv, OPTION_LIST))) {
 		switch (op) {
 			case 'v':	version_mode = TRUE; 	break;
 			case 'L':	version_mode = TRUE; 	
