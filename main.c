@@ -355,10 +355,10 @@ int main (int argc, char *argv[])
 		exit (EXIT_FAILURE);
 	}
 	if (help_mode) {
-		printf ("\n%s", intro_str);
+		fprintf (stderr, "\n%s", intro_str);
 		example();
 		usage();
-		printf ("%s\n", copyright_str);
+		fprintf (stderr, "%s\n", copyright_str);
 		exit (EXIT_SUCCESS);
 	}
 	if (switch_mode && !help_mode) {
