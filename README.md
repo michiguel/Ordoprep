@@ -52,7 +52,7 @@ where `list.txt` contains, for instance:
 `input3.pgn`
 `"file with other games.pgn"`
 
-#### Name synonyms
+#### Name synonyms (aliases)
 Sometimes, the same player (engine) has been named differently in tournaments.
 The user can speficify what names are actually synonyms, so Ordoprep will consider them as one.
 The switch `-Y <file>` indicates that the file (.csv format) will contain a list of synonyms. 
@@ -70,10 +70,10 @@ In certain situations, the user may want to include/discard only a subset of the
 #### Help
 Other switches are available and information about them can be obtained by typing
 
-`ordoprep -h`
+`ordoprep --help` or `ordoprep -h`
 
 ```
-quick example: ordoprep -p raw.pgn -o shrunk.pgn
+quick example: `ordoprep -p raw.pgn -o shrunk.pgn`
   Processes and shrinks input.pgn selecting only names and results
   stripping it from moves and comments. Output goes to shrunk.pgn
   if the swicth -o is not specified, the output goes to the screen
