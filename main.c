@@ -60,6 +60,31 @@ static void usage (void);
 
 /* VARIABLES */
 
+
+	/*	 ....5....|....5....|....5....|....5....|....5....|....5....|....5....|....5....|*/
+
+static struct option long_options[] = {
+	{"help", 			no_argument,       0,  'h'	},
+	{"version",			no_argument,       0,  'v'	},
+	{"show-switches",	no_argument,       0,  'H'	},
+	{"license",			no_argument,       0,  'L'	},
+	{"quiet",			no_argument,       0,  'q'	},
+	{"no-perfects",		no_argument,       0,  'd'	},
+	{"min-perf",		required_argument, 0,  'm' 	},
+	{"min-games",		required_argument, 0,  'g' 	},
+	{"pgn",				required_argument, 0,  'p' 	},
+	{"pgn-list",		required_argument, 0,  'P' 	},
+	{"aliases",			required_argument, 0,  'Y' 	},
+	{"include",			required_argument, 0,  'i' 	},
+	{"exclude",			required_argument, 0,  'x' 	},
+	{"output",			required_argument, 0,  'o' 	},
+	{0,         		0,                 0,   0 	}
+};
+
+static int longoidx;
+
+/* VARIABLES */
+
 	static bool_t QUIET_MODE;
 	static bool_t DISCARD_MODE;
 
@@ -78,6 +103,7 @@ static void usage (void);
 		"  if the swicth -o is not specified, the output goes to the screen\n"
 		;
 
+#if 0
 	static const char *help_str =
 		" -h         print this help\n"
 		" -H         print just the switches\n"
@@ -94,6 +120,8 @@ static void usage (void);
 		" -x <file>  names in <file> will not have their games included\n"
 		" -o <file>  output file (text format). If absent, output goes to the screen\n"
 		"\n"
+#endif
+
 	/*	 ....5....|....5....|....5....|....5....|....5....|....5....|....5....|....5....|*/
 		;
 
@@ -114,6 +142,141 @@ static long int	Min_gamesplayed = 0;
 static bool_t	Min_gamesplayed_use = FALSE;
 static bool_t 	Min_percentage_use = FALSE;
 
+
+
+//
+
+struct helpline {
+	int c;
+	const char * longc;
+	int has_arg;
+	const char *argstr;
+	const char *helpstr;
+};
+
+struct helpline SH[] = {
+{	'h',
+	"help",
+	no_argument,
+	NULL,
+	"print this help"},
+
+{	'H',
+	"show-switches",
+	no_argument,
+	NULL,
+	"print just the switches"},
+
+{	'v',
+	"version",
+	no_argument,
+	NULL,
+	"print version number and exit"},
+
+{	'L',
+	"license",
+	no_argument,
+	NULL,
+	"display license information"},
+
+{	'q',
+	"quiet",
+	no_argument,
+	NULL,
+	"quiet (no screen progress updates)"},
+
+{	'd',
+	"no-perfects",
+	no_argument,
+	NULL,
+	"discard players with no wins or no losses"},
+
+{	'm',
+	"min-perf",
+	required_argument,
+	"NUM",
+	"discard players with a % performance lower than <NUM>"},
+
+{	'g',
+	"min-games",
+	required_argument,
+	"NUM",
+	"discard players with less than <NUM> number of games played"},
+
+{	'p',
+	"pgn",
+	required_argument,
+	"FILE",
+	"input file in PGN format"},
+
+{	'P',
+	"pgn-list",
+	required_argument,
+	"FILE",
+	"text file with a list of input PGN files"},
+
+{	'Y',
+	"aliases",
+	required_argument,
+	"FILE",
+	"name synonyms (csv format). Each line: main,syn1,syn2 etc."},
+
+{	'i',
+	"include",
+	required_argument,
+	"FILE",
+	"include only games of participants present in <FILE>"},
+
+{	'x',
+	"exclude",
+	required_argument,
+	"FILE",
+	"names in <FILE> will not have their games included"},
+
+{	'o',
+	"output",
+	required_argument,
+	"FILE",
+	"output file (text format). Default output goes to screen"},
+//
+
+{	0,
+	NULL,
+	0,
+	NULL,
+	NULL},
+
+};
+
+static void
+printlonghelp (FILE *outf, struct helpline *h)
+{
+	char head[80];
+
+	fprintf (outf, "\n");
+	while (h->helpstr != NULL) {
+
+		sprintf (head, " %c%c%s %s%s%s%s%s%s", 
+					h->c!='\0'?'-' :' ',
+					h->c!='\0'?h->c:' ', 
+					h->longc!=NULL && h->c!='\0'?",":" ",
+					h->longc!=NULL?"--":"", 
+					h->longc!=NULL?h->longc:"", 
+
+					h->has_arg==optional_argument && h->longc!=NULL?"[":"",
+					h->has_arg!=no_argument && h->longc!=NULL? "=" :"",
+					h->has_arg!=no_argument? h->argstr :"",
+					h->has_arg==optional_argument && h->longc!=NULL?"]":""
+		);
+		
+		fprintf (outf, "%-20s %s\n", 
+					head, 
+					h->helpstr
+		);
+		h++;
+	}
+	fprintf (outf, "\n");
+}
 /*
 |
 |	MAIN
@@ -152,7 +315,9 @@ int main (int argc, char *argv[])
 	includes_str = NULL;
 	textstr 	 = NULL;
 
-	while (END_OF_OPTIONS != (op = options (argc, argv, OPTION_LIST))) {
+	while (END_OF_OPTIONS != (op = options_l (argc, argv, OPTION_LIST, long_options, &longoidx))) {
+
+//	while (END_OF_OPTIONS != (op = options (argc, argv, OPTION_LIST))) {
 		switch (op) {
 			case 'v':	version_mode = TRUE; 	break;
 			case 'L':	version_mode = TRUE; 	
@@ -332,10 +497,18 @@ usage (void)
 	const char *usage_options = "[-OPTION]";
 	fprintf (stderr, "\n"
 		"usage: %s %s\n"
-		"%s"
 		, proginfo_name()
 		, usage_options
-		, help_str);
+		);
+
+#if 0
+	fprintf (stderr, 
+		"%s"
+		, help_str
+		);
+#else
+		printlonghelp(stderr, SH);
+#endif
 }
 
 //--- multipush
