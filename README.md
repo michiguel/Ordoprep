@@ -85,6 +85,7 @@ usage: ordoprep [-OPTION]
  -v, --version       print version number and exit
  -L, --license       display license information
  -q, --quiet         quiet (no screen progress updates)
+     --silent        same as --quiet
  -d, --no-perfects   discard players with no wins or no losses
  -m, --min-perf=NUM  discard players with a % performance lower than <NUM>
  -g, --min-games=NUM discard players with less than <NUM> number of games played
