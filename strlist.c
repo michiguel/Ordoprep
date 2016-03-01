@@ -23,6 +23,7 @@
 #include <assert.h>
 
 #include "strlist.h"
+#include "mymem.h"
 
 bool_t
 strlist_init (strlist_t *sl)
@@ -41,7 +42,7 @@ string_dup (const char *s)
 	char *p;
 	char *q;
 	size_t len = strlen(s);
-	p = malloc (len + 1);
+	p = memnew (len + 1);
 	if (p == NULL) return NULL;
 	q = p;
 	while (*s) *p++ = *s++;
@@ -52,13 +53,13 @@ string_dup (const char *s)
 static void
 string_free (char *s)
 {
-	free(s);
+	memrel(s);
 }
 
 static strnode_t *
 newnode(void)
 {
-	strnode_t *p = malloc(sizeof(strnode_t));
+	strnode_t *p = memnew(sizeof(strnode_t));
 	if (p) {
 		p->str = NULL;
 		p->nxt = NULL;
@@ -74,7 +75,7 @@ freenode(strnode_t *n)
 		if (n->str) string_free(n->str);
 		n->str = NULL; // not really needed, safe
 		n->nxt = NULL; // not really needed, safe
-		free(n);
+		memrel(n);
 	}
 }
 
