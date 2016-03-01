@@ -69,6 +69,7 @@ static struct option long_options[] = {
 	{"show-switches",	no_argument,       0,  'H'	},
 	{"license",			no_argument,       0,  'L'	},
 	{"quiet",			no_argument,       0,  'q'	},
+	{"silent",			no_argument,       0,  '\0' },
 	{"no-perfects",		no_argument,       0,  'd'	},
 	{"min-perf",		required_argument, 0,  'm' 	},
 	{"min-games",		required_argument, 0,  'g' 	},
@@ -159,6 +160,12 @@ struct helpline SH[] = {
 	no_argument,
 	NULL,
 	"quiet (no screen progress updates)"},
+
+{	'\0',
+	"silent",
+	no_argument,
+	NULL,
+	"same as --quiet"},
 
 {	'd',
 	"no-perfects",
@@ -271,7 +278,7 @@ int main (int argc, char *argv[])
 	FILE *textf;
 
 	int op;
-	int longoidx;
+	int longoidx=0;
 
 	const char *single_pgn, *multi_pgn, *textstr, *synstr, *excludes_str, *includes_str;
 	int version_mode, help_mode, switch_mode, license_mode, input_mode;
@@ -294,6 +301,14 @@ int main (int argc, char *argv[])
 	while (END_OF_OPTIONS != (op = options_l (argc, argv, OPTION_LIST, long_options, &longoidx))) {
 
 		switch (op) {
+			case '\0':
+						if (!strcmp(long_options[longoidx].name, "silent")) {
+							QUIET_MODE = TRUE;
+						} else {
+							fprintf (stderr, "ERROR: %d\n", op);
+							exit(EXIT_FAILURE);
+						}
+						break;	
 			case 'v':	version_mode = TRUE; 	break;
 			case 'L':	version_mode = TRUE; 	
 						license_mode = TRUE;
