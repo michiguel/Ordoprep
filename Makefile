@@ -7,7 +7,7 @@ LIBFLAGS = -lm
 EXE = ordoprep
 
 SRC = main.c main2.c myopt/myopt.c proginfo.c pgnget.c mymem.c namehash.c inidone.c plyrs.c bitarray.c strlist.c csv.c
-DEPS = bool_t.h  main2.h  proginfo.h  progname.h  version.h pgnget.h mymem.h namehash.h inidone.h plyrs.h bitarray.h strlist.h csv.h
+DEPS = bool_t.h main2.h  proginfo.h  progname.h version.h pgnget.h mymem.h namehash.h inidone.h plyrs.h bitarray.h strlist.h csv.h
 OBJ = main.o main2.o myopt/myopt.o proginfo.o pgnget.o mymem.o namehash.o inidone.o plyrs.o bitarray.o strlist.o csv.o
 
 %.o: %.c $(DEPS)
