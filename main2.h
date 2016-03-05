@@ -28,7 +28,11 @@
 
 struct FLAGS {
 	bool_t quietmode;
+	bool_t dowarning;
 };
+
+extern void
+flags_reset(struct FLAGS *f);
 
 extern 
 int 

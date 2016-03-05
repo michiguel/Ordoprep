@@ -20,6 +20,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <assert.h>
 
 #include "boolean.h"
 #include "mytypes.h"
@@ -30,6 +31,14 @@
 #include "plyrs.h"
 
 #include "strlist.h"
+
+void
+flags_reset(struct FLAGS *f)
+{
+	assert(f);
+	f->quietmode = FALSE;
+	f->dowarning = FALSE;
+}
 
 static long	*perf   ;
 static long	*perfmax;
@@ -228,7 +237,7 @@ main2	( strlist_t *psl
 {
 	struct DATA *pdaba;
 	bool_t quietmode = flag->quietmode;
-	bool_t dowarning = TRUE;
+	bool_t dowarning = flag->dowarning;
 
 	/*==== set input ====*/
 

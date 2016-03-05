@@ -83,7 +83,6 @@ static struct option long_options[] = {
 	{0,         		0,                 0,   0 	}
 };
 
-	static bool_t QUIET_MODE;
 	static bool_t DISCARD_MODE;
 
 	static const char *copyright_str = 
@@ -292,7 +291,6 @@ int main (int argc, char *argv[])
 	help_mode    = FALSE;
 	switch_mode  = FALSE;
 	input_mode   = FALSE;
-	QUIET_MODE   = FALSE;
 	DISCARD_MODE = FALSE;
 	single_pgn   = NULL;
 	multi_pgn    = NULL;
@@ -302,14 +300,14 @@ int main (int argc, char *argv[])
 	textstr 	 = NULL;
 
 	// reset flags
-	flag.quietmode = FALSE;
+	flags_reset(&flag);
 
 	while (END_OF_OPTIONS != (op = options_l (argc, argv, OPTION_LIST, long_options, &longoidx))) {
 
 		switch (op) {
 			case '\0':
 						if (!strcmp(long_options[longoidx].name, "silent")) {
-							QUIET_MODE = TRUE;
+							flag.quietmode = TRUE;
 						} else {
 							fprintf (stderr, "ERROR: %d\n", op);
 							exit(EXIT_FAILURE);
@@ -335,7 +333,7 @@ int main (int argc, char *argv[])
 						break;
 			case 'o': 	textstr = opt_arg;
 						break;
-			case 'q':	QUIET_MODE = TRUE;	break;
+			case 'q':	flag.quietmode = TRUE;	break;
 			case 'd':	DISCARD_MODE = TRUE;	break;
 			case 'm': 	if (1 != sscanf(opt_arg,"%lf", &Min_percentage)) {
 							fprintf(stderr, "wrong min. percentage\n");
@@ -438,7 +436,7 @@ int main (int argc, char *argv[])
 
 	/*--------------------*/
 
-	flag.quietmode = QUIET_MODE;
+	flag.dowarning = TRUE;
 
 	ret = main2	( psl
 				, &flag
