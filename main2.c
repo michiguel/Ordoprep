@@ -38,6 +38,9 @@ flags_reset(struct FLAGS *f)
 	assert(f);
 	f->quietmode = FALSE;
 	f->dowarning = FALSE;
+	f->discard_mode = FALSE; 	
+	f->min_percentage_use = FALSE;
+	f->min_gamesplayed_use = FALSE;
 }
 
 static long	*perf   ;
@@ -226,9 +229,6 @@ main2	( strlist_t *psl
 		, struct GAMESTATS	Game_stats
 		, double Min_percentage
 		, long int	Min_gamesplayed 
-		, bool_t Min_gamesplayed_use
-		, bool_t Min_percentage_use
-		, bool_t DISCARD_MODE
 		, FILE *textf
 		, const char *synstr
 		, const char *includes_str
@@ -238,6 +238,10 @@ main2	( strlist_t *psl
 	struct DATA *pdaba;
 	bool_t quietmode = flag->quietmode;
 	bool_t dowarning = flag->dowarning;
+	bool_t min_gamesplayed_use = flag->min_gamesplayed_use;
+	bool_t min_percentage_use = flag->min_percentage_use;
+	bool_t discard_mode = flag->discard_mode;
+
 
 	/*==== set input ====*/
 
@@ -328,15 +332,15 @@ main2	( strlist_t *psl
 
 	calc_perf(&Players, &Games);
 
-	if (Min_percentage_use) {
+	if (min_percentage_use) {
 		if (!quietmode) printf ("Exclude based on minimum percentage performance = %.2f%s\n",Min_percentage,"%");	
 		discard_percmin (quietmode,Min_percentage/100, &Players, &Games);
 	}
-	if (Min_gamesplayed_use) {
+	if (min_gamesplayed_use) {
 		if (!quietmode) printf ("Exclude if less than %ld games played\n",Min_gamesplayed);
 		discard_playedmin(quietmode,(double)Min_gamesplayed, &Players, &Games);
 	}
-	if (DISCARD_MODE) {
+	if (discard_mode) {
 		if (!quietmode) printf ("Exclude if performance is 'all wins' or 'all losses' (recursive)\n");
 		do {
 			calc_perf(&Players, &Games);

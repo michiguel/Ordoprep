@@ -29,6 +29,9 @@
 struct FLAGS {
 	bool_t quietmode;
 	bool_t dowarning;
+	bool_t discard_mode; // DISCARD_MODE	
+	bool_t min_percentage_use;
+	bool_t min_gamesplayed_use;
 };
 
 extern void
@@ -43,9 +46,6 @@ main2	( strlist_t *psl
 		, struct GAMESTATS	Game_stats
 		, double Min_percentage
 		, long int	Min_gamesplayed 
-		, bool_t Min_gamesplayed_use
-		, bool_t Min_percentage_use
-		, bool_t DISCARD_MODE
 		, FILE *textf
 		, const char *synstr
 		, const char *includes_str

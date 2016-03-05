@@ -83,8 +83,6 @@ static struct option long_options[] = {
 	{0,         		0,                 0,   0 	}
 };
 
-	static bool_t DISCARD_MODE;
-
 	static const char *copyright_str = 
 		"Copyright (c) 2016 Miguel A. Ballicora\n"
 		"There is NO WARRANTY of any kind\n"
@@ -117,8 +115,6 @@ static struct GAMESTATS		Game_stats;
 
 static double 	Min_percentage  = 0.0;
 static long int	Min_gamesplayed = 0;
-static bool_t	Min_gamesplayed_use = FALSE;
-static bool_t 	Min_percentage_use = FALSE;
 
 //
 
@@ -291,7 +287,6 @@ int main (int argc, char *argv[])
 	help_mode    = FALSE;
 	switch_mode  = FALSE;
 	input_mode   = FALSE;
-	DISCARD_MODE = FALSE;
 	single_pgn   = NULL;
 	multi_pgn    = NULL;
 	synstr		 = NULL;
@@ -334,19 +329,19 @@ int main (int argc, char *argv[])
 			case 'o': 	textstr = opt_arg;
 						break;
 			case 'q':	flag.quietmode = TRUE;	break;
-			case 'd':	DISCARD_MODE = TRUE;	break;
+			case 'd':	flag.discard_mode = TRUE;	break;
 			case 'm': 	if (1 != sscanf(opt_arg,"%lf", &Min_percentage)) {
 							fprintf(stderr, "wrong min. percentage\n");
 							exit(EXIT_FAILURE);
 						} else {
-							Min_percentage_use = TRUE;
+							flag.min_percentage_use = TRUE;
 						}
 						break;
 			case 'g': 	if (1 != sscanf(opt_arg,"%ld", &Min_gamesplayed)) {
 							fprintf(stderr, "wrong min. games played\n");
 							exit(EXIT_FAILURE);
 						} else {
-							Min_gamesplayed_use = TRUE;
+							flag.min_gamesplayed_use = TRUE;
 						}
 						break;
 			case '?': 	parameter_error();
@@ -445,9 +440,6 @@ int main (int argc, char *argv[])
 				, Game_stats
 				, Min_percentage
 				, Min_gamesplayed 
-				, Min_gamesplayed_use
-				, Min_percentage_use
-				, DISCARD_MODE
 				, textf
 				, synstr
 				, includes_str
