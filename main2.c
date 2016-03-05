@@ -238,9 +238,9 @@ main2	( strlist_t *psl
 	struct DATA *pdaba;
 	bool_t quietmode = flag->quietmode;
 	bool_t dowarning = flag->dowarning;
-	bool_t min_gamesplayed_use = flag->min_gamesplayed_use;
-	bool_t min_percentage_use = flag->min_percentage_use;
-	bool_t discard_mode = flag->discard_mode;
+	bool_t min_games = flag->min_gamesplayed_use;
+	bool_t min_perce = flag->min_percentage_use;
+	bool_t discard_m = flag->discard_mode;
 
 
 	/*==== set input ====*/
@@ -332,15 +332,15 @@ main2	( strlist_t *psl
 
 	calc_perf(&Players, &Games);
 
-	if (min_percentage_use) {
+	if (min_perce) {
 		if (!quietmode) printf ("Exclude based on minimum percentage performance = %.2f%s\n",Min_percentage,"%");	
 		discard_percmin (quietmode,Min_percentage/100, &Players, &Games);
 	}
-	if (min_gamesplayed_use) {
+	if (min_games) {
 		if (!quietmode) printf ("Exclude if less than %ld games played\n",Min_gamesplayed);
 		discard_playedmin(quietmode,(double)Min_gamesplayed, &Players, &Games);
 	}
-	if (discard_mode) {
+	if (discard_m) {
 		if (!quietmode) printf ("Exclude if performance is 'all wins' or 'all losses' (recursive)\n");
 		do {
 			calc_perf(&Players, &Games);
