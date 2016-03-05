@@ -267,7 +267,7 @@ database_transform(const struct DATA *db, struct GAMES *g, struct PLAYERS *p, st
 			g->ga[i].score       =      db->gb[blk]->score[idx];
 			if (g->ga[i].score <= DISCARD) gamestat[g->ga[i].score]++;
 
-			if (g->ga[i].score != DISCARD) {
+			if (g->ga[i].score < DISCARD) {
 				p->present_in_games[wp] = TRUE;
 				p->present_in_games[bp] = TRUE;
 			}
@@ -286,7 +286,7 @@ database_transform(const struct DATA *db, struct GAMES *g, struct PLAYERS *p, st
 			g->ga[i].score       =      db->gb[blk]->score[idx];
 			if (g->ga[i].score <= DISCARD) gamestat[g->ga[i].score]++;
 
-			if (g->ga[i].score != DISCARD) {
+			if (g->ga[i].score < DISCARD) {
 				p->present_in_games[wp] = TRUE;
 				p->present_in_games[bp] = TRUE;
 			}
@@ -325,7 +325,7 @@ database_ignore_draws (struct DATA *db)
 	for (blk = 0; blk < blk_filled; blk++) {
 		for (idx = 0; idx < MAXGAMESxBLOCK; idx++) {
 			if (db->gb[blk]->score[idx] == RESULT_DRAW)
-				db->gb[blk]->score[idx] = DISCARD;
+				db->gb[blk]->score[idx] |= IGNORED;
 		}
 	}
 
@@ -333,7 +333,7 @@ database_ignore_draws (struct DATA *db)
 
 		for (idx = 0; idx < idx_last; idx++) {
 			if (db->gb[blk]->score[idx] == RESULT_DRAW)
-				db->gb[blk]->score[idx] = DISCARD;
+				db->gb[blk]->score[idx] |= IGNORED;
 		}
 
 	return;
@@ -355,7 +355,7 @@ database_include_only (struct DATA *db, bitarray_t *pba)
 			wp = db->gb[blk]->white[idx];
 			bp = db->gb[blk]->black[idx];
 			if (!ba_ison(pba, wp) || !ba_ison(pba, bp))
-				db->gb[blk]->score[idx] = DISCARD;
+				db->gb[blk]->score[idx] |= IGNORED;
 		}
 	}
 
@@ -365,7 +365,7 @@ database_include_only (struct DATA *db, bitarray_t *pba)
 			wp = db->gb[blk]->white[idx];
 			bp = db->gb[blk]->black[idx];
 			if (!ba_ison(pba, wp) || !ba_ison(pba, bp))
-				db->gb[blk]->score[idx] = DISCARD;
+				db->gb[blk]->score[idx] |= IGNORED;
 		}
 
 	return;

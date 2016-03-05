@@ -64,7 +64,7 @@ calc_perf (struct PLAYERS *pl, struct GAMES *gm)
 
 	for (i = 0; i < ng; i++) {
 	
-		if (ga[i].score == DISCARD) continue;
+		if (ga[i].score >= DISCARD) continue;
 
 		w = ga[i].whiteplayer;
 		b = ga[i].blackplayer;
@@ -108,14 +108,15 @@ discard (bool_t quiet, struct PLAYERS *pl, struct GAMES *gm)
 			excluded++;
 			if (!quiet)	printf ("  %s\n",name[j]);
 			for (i = 0; i < ng; i++) {
-				if (ga[i].score == DISCARD) continue;
+				if (ga[i].score >= DISCARD) continue;
 				if (ga[i].whiteplayer == j || ga[i].blackplayer == j) {
-					ga[i].score = DISCARD;
+					ga[i].score |= IGNORED;
 				}
 			}
 		}
 	}
-	printf ("\nExcluded: %ld\n", excluded);
+	if (!quiet)
+		printf ("\nExcluded: %ld\n", excluded);
 	return found;
 }
 
@@ -143,9 +144,9 @@ discard_percmin (bool_t quiet, double p, struct PLAYERS *pl, struct GAMES *gm)
 			excluded++;
 			if (!quiet)	printf ("  %s\n",name[j]);
 			for (i = 0; i < ng; i++) {
-				if (ga[i].score == DISCARD) continue;
+				if (ga[i].score >= DISCARD) continue;
 				if (ga[i].whiteplayer == j || ga[i].blackplayer == j) {
-					ga[i].score = DISCARD;
+					ga[i].score |= IGNORED;
 				}
 			}
 		}
@@ -177,9 +178,9 @@ discard_playedmin (bool_t quiet, double p, struct PLAYERS *pl, struct GAMES *gm)
 			excluded++;
 			if (!quiet)	printf ("  %s\n",name[j]);
 			for (i = 0; i < ng; i++) {
-				if (ga[i].score == DISCARD) continue;
+				if (ga[i].score >= DISCARD) continue;
 				if (ga[i].whiteplayer == j || ga[i].blackplayer == j) {
-					ga[i].score = DISCARD;
+					ga[i].score |= IGNORED;
 				}
 			}
 		}
@@ -202,7 +203,44 @@ save2pgnf(struct GAMES *gm, struct PLAYERS *pl, FILE *f)
 		player_t wh = ga[i].whiteplayer;
 		player_t bl = ga[i].blackplayer;
 
-		if (sco != DISCARD) {
+		if (sco < DISCARD) {
+			switch (sco) {
+				case WHITE_WIN:
+				case BLACK_WIN:
+				case RESULT_DRAW:
+					fprintf(f, "[White \"%s\"]\n"  , name[wh]    );
+					fprintf(f, "[Black \"%s\"]\n"  , name[bl]    );
+					fprintf(f, "[Result \"%s\"]\n" , result_string[sco] );
+					fprintf(f, "%s\n\n"            , result_string[sco] );
+					break;
+				default:
+					break;
+			}
+		}
+	}		
+
+	return;
+}
+
+static void	
+save2pgnf_ignored(struct GAMES *gm, struct PLAYERS *pl, FILE *f)
+{
+	struct gamei *ga = gm->ga;
+	const char  **name = pl->name;
+	gamesnum_t i;
+
+	const char *result_string[] = {"1-0", "1/2-1/2", "0-1"};
+		
+	for (i = 0; i < gm->n; i++) {
+		int32_t sco = ga[i].score;
+		player_t wh = ga[i].whiteplayer;
+		player_t bl = ga[i].blackplayer;
+
+		if (0 == (sco & IGNORED)) continue;
+
+		sco &= ~IGNORED;
+
+		if (sco < DISCARD) {
 			switch (sco) {
 				case WHITE_WIN:
 				case BLACK_WIN:
@@ -234,6 +272,7 @@ main2	( strlist_t *psl
 		, const char *synstr
 		, const char *includes_str
 		, const char *excludes_str
+		, const char *remainin_str
 )
 {
 	struct DATA *pdaba;
@@ -349,6 +388,17 @@ main2	( strlist_t *psl
 	}
 
 	save2pgnf(&Games, &Players, textf);
+
+	if (NULL != remainin_str) {
+		FILE *remf;
+		if (NULL != (remf = fopen (remainin_str, "w"))) {
+			save2pgnf_ignored (&Games, &Players, remf);
+			fclose(remf);
+		} else {
+			fprintf (stderr, "Problems to output remaining games\n");
+			return EXIT_FAILURE; 
+		}
+	}
 
 	return EXIT_SUCCESS;
 }

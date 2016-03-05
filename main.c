@@ -79,6 +79,7 @@ static struct option long_options[] = {
 	{"aliases",			required_argument, 0,  'Y' 	},
 	{"include",			required_argument, 0,  'i' 	},
 	{"exclude",			required_argument, 0,  'x' 	},
+	{"remaining",		required_argument, 0,  '\0'	},
 	{"no-warnings",		no_argument,       0,  '\0'	},
 	{"output",			required_argument, 0,  'o' 	},
 	{0,         		0,                 0,   0 	}
@@ -213,6 +214,13 @@ struct helpline SH[] = {
 	"names in <FILE> will not have their games included"},
 
 {	'\0',
+	"remaining",
+	required_argument,
+	"FILE",
+	"games that were not included in the output"},
+
+
+{	'\0',
 	"no-warnings",
 	no_argument,
 	NULL,
@@ -253,7 +261,7 @@ printlonghelp (FILE *outf, struct helpline *h)
 					h->has_arg==optional_argument && h->longc!=NULL?"]":""
 		);
 		
-		fprintf (outf, "%-20s %s\n", 
+		fprintf (outf, "%-21s %s\n", 
 					head, 
 					h->helpstr
 		);
@@ -285,7 +293,7 @@ int main (int argc, char *argv[])
 	int op;
 	int longoidx=0;
 
-	const char *single_pgn, *multi_pgn, *textstr, *synstr, *excludes_str, *includes_str;
+	const char *single_pgn, *multi_pgn, *textstr, *synstr, *excludes_str, *includes_str, *remainin_str;
 	int version_mode, help_mode, switch_mode, license_mode, input_mode;
 
 	/* defaults */
@@ -299,6 +307,7 @@ int main (int argc, char *argv[])
 	synstr		 = NULL;
 	excludes_str = NULL;
 	includes_str = NULL;
+	remainin_str = NULL;
 	textstr 	 = NULL;
 
 	// reset flags
@@ -313,6 +322,9 @@ int main (int argc, char *argv[])
 						} else
 						if (!strcmp(long_options[longoidx].name, "no-warnings")) {
 							flag.dowarning = FALSE;
+						} else
+						if (!strcmp(long_options[longoidx].name, "remaining")) {
+							remainin_str = opt_arg;
 						} else {
 							fprintf (stderr, "ERROR: %d\n", op);
 							exit(EXIT_FAILURE);
@@ -452,6 +464,7 @@ int main (int argc, char *argv[])
 				, synstr
 				, includes_str
 				, excludes_str
+				, remainin_str
 				);
 
 	/*--------------------*/

@@ -33,7 +33,8 @@ enum RESULTS {
 	WHITE_WIN = 0,
 	RESULT_DRAW = 1,
 	BLACK_WIN = 2,
-	DISCARD = 3
+	DISCARD = 3,
+	IGNORED = 4
 };
 
 extern struct DATA *database_init_frompgn (strlist_t *sl, const char *synfile_name, bool_t quiet);
