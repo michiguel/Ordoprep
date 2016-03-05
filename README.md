@@ -67,6 +67,9 @@ In this example, Gaviota 1.0 and Stockfish 6 would be the names used by Ordoprep
 #### Excluding games
 In certain situations, the user may want to include/discard only a subset of the games present in the input file/s. Switches `-i <file>` and `-x <file>` are used for this purpose. Switch `-i` includes _only_ the games of participants listed in `<file>`. In this file, each participant name has to be in different lines. Also, each of those names may or may not be surrounded by quotes. Both are accepted. For this reason, if a `.csv` file is provided as a list of participants, only the first column is read. In addition, `-x` could be use to _exclude_ games of participants listed in `<file>`.
 
+#### Remaining games
+with the switch `--remaining <file>`, ordoprep will save all the games that were not included in the output
+
 #### Help
 Other switches are available and information about them can be obtained by typing
 
