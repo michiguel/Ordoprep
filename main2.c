@@ -211,7 +211,7 @@ save2pgnf(struct GAMES *gm, struct PLAYERS *pl, FILE *f)
 
 int 
 main2	( strlist_t *psl
-		, bool_t quietmode
+		, struct FLAGS *flag
 		, struct GAMES Games
 		, struct PLAYERS Players
 		, struct GAMESTATS	Game_stats
@@ -227,8 +227,8 @@ main2	( strlist_t *psl
 )
 {
 	struct DATA *pdaba;
-
-
+	bool_t quietmode = flag->quietmode;
+	bool_t dowarning = TRUE;
 
 	/*==== set input ====*/
 
@@ -243,7 +243,7 @@ main2	( strlist_t *psl
 		if (NULL != includes_str) {
 			bitarray_t ba;
 			if (ba_init (&ba,pdaba->n_players)) {
-				namelist_to_bitarray (quietmode, includes_str, pdaba, &ba);
+				namelist_to_bitarray (quietmode, dowarning, includes_str, pdaba, &ba);
 				database_include_only(pdaba, &ba);
 			} else {
 				fprintf (stderr, "ERROR\n");
@@ -253,7 +253,7 @@ main2	( strlist_t *psl
 		if (NULL != excludes_str) {
 			bitarray_t ba;
 			if (ba_init (&ba,pdaba->n_players)) {
-				namelist_to_bitarray (quietmode, excludes_str, pdaba, &ba);
+				namelist_to_bitarray (quietmode, dowarning, excludes_str, pdaba, &ba);
 				ba_setnot(&ba);
 				database_include_only(pdaba, &ba);
 			} else {

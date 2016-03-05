@@ -609,12 +609,26 @@ do_tick (const struct DATA *d, const char *namestr, bitarray_t *pba)
 	return ok;
 }
 
+static void
+warning(bool_t do_warning, const char *filename, const char *myline, size_t linenumber)
+{
+	if (!do_warning) return;
+	fprintf(stderr, "WARNING (not matching name): file \"%s\", line %ld = %s\n", filename, (long)linenumber, myline);
+}
+
+static bool_t
+isblankline(const char *s)
+{
+	while (isspace(*s)) s++; 
+	return *s == '\0';
+}
+
 void
-namelist_to_bitarray (bool_t quietmode, const char *finp_name, const struct DATA *d, bitarray_t *pba)
+namelist_to_bitarray (bool_t quietmode, bool_t do_warning, const char *finp_name, const struct DATA *d, bitarray_t *pba)
 {
 	FILE *finp;
 	char myline[MAXSIZE_CSVLINE];
-	char *p;
+	size_t linenumber = 0;
 	bool_t line_success = TRUE;
 	bool_t file_success = TRUE;
 
@@ -634,14 +648,14 @@ namelist_to_bitarray (bool_t quietmode, const char *finp_name, const struct DATA
 
 		while ( line_success && NULL != fgets(myline, MAXSIZE_CSVLINE, finp)) {
 
-			p = skipblanks(myline);
-			if (*p == '\0') continue;
+			linenumber++;
+			if (isblankline(myline)) continue;
 
-			if (csv_line_init(&csvln, myline)) {
-				line_success = csvln.n == 1 && do_tick (d, csvln.s[0], pba);
+			if (TRUE == (line_success = csv_line_init(&csvln, myline))) {
+				if (!(csvln.n == 1 && do_tick (d, csvln.s[0], pba))) {
+					warning(do_warning, finp_name, myline, linenumber);
+				}
 				csv_line_done(&csvln);		
-			} else {
-				line_success = FALSE;
 			}
 		}
 
@@ -655,7 +669,7 @@ namelist_to_bitarray (bool_t quietmode, const char *finp_name, const struct DATA
 		exit(EXIT_FAILURE);
 	} else 
 	if (!line_success) {
-		fprintf (stderr, "Errors in file \"%s\" (not matching names)\n",finp_name);
+		fprintf (stderr, "Errors in file \"%s\", line %ld (line parsing problem or lack of memory)\n",finp_name, (long)linenumber);
 		exit(EXIT_FAILURE);
 	} 
 	if (!quietmode)	printf ("Names uploaded succesfully\n");

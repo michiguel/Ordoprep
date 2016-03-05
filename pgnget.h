@@ -46,7 +46,7 @@ extern void 		database_ignore_draws (struct DATA *db);
 extern const char *	database_getname (const struct DATA *db, player_t i);
 extern void 		database_include_only (struct DATA *db, bitarray_t *pba);
 
-extern void 		namelist_to_bitarray (bool_t quietmode, const char *finp_name, const struct DATA *d, bitarray_t *pba);
+extern void 		namelist_to_bitarray (bool_t quietmode, bool_t do_warning, const char *finp_name, const struct DATA *d, bitarray_t *pba);
 
 /*<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<*/
 #endif

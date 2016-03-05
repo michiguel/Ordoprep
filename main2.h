@@ -26,11 +26,14 @@
 #include "mytypes.h"
 #include "strlist.h"
 
+struct FLAGS {
+	bool_t quietmode;
+};
 
 extern 
 int 
 main2	( strlist_t *psl
-		, bool_t quietmode
+		, struct FLAGS *flag
 		, struct GAMES Games
 		, struct PLAYERS Players
 		, struct GAMESTATS	Game_stats

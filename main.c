@@ -270,6 +270,8 @@ static bool_t strlist_multipush (strlist_t *sl, const char *finp_name);
 
 int main (int argc, char *argv[])
 {
+	struct FLAGS flag;
+
 	strlist_t SL;
 	strlist_t *psl = &SL;
 
@@ -298,6 +300,9 @@ int main (int argc, char *argv[])
 	excludes_str = NULL;
 	includes_str = NULL;
 	textstr 	 = NULL;
+
+	// reset flags
+	flag.quietmode = FALSE;
 
 	while (END_OF_OPTIONS != (op = options_l (argc, argv, OPTION_LIST, long_options, &longoidx))) {
 
@@ -433,8 +438,10 @@ int main (int argc, char *argv[])
 
 	/*--------------------*/
 
+	flag.quietmode = QUIET_MODE;
+
 	ret = main2	( psl
-				, QUIET_MODE
+				, &flag
 				, Games
 				, Players
 				, Game_stats
