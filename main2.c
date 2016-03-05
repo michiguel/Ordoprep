@@ -197,12 +197,12 @@ save2pgnf(struct GAMES *gm, struct PLAYERS *pl, FILE *f)
 
 	const char *result_string[] = {"1-0", "1/2-1/2", "0-1"};
 		
-		for (i = 0; i < gm->n; i++) {
-			int32_t sco = ga[i].score;
-			player_t wh = ga[i].whiteplayer;
-			player_t bl = ga[i].blackplayer;
+	for (i = 0; i < gm->n; i++) {
+		int32_t sco = ga[i].score;
+		player_t wh = ga[i].whiteplayer;
+		player_t bl = ga[i].blackplayer;
 
-			if (sco == DISCARD) continue;
+		if (sco != DISCARD) {
 			switch (sco) {
 				case WHITE_WIN:
 				case BLACK_WIN:
@@ -215,7 +215,8 @@ save2pgnf(struct GAMES *gm, struct PLAYERS *pl, FILE *f)
 				default:
 					break;
 			}
-		}		
+		}
+	}		
 
 	return;
 }
