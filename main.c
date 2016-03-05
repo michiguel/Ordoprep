@@ -79,6 +79,7 @@ static struct option long_options[] = {
 	{"aliases",			required_argument, 0,  'Y' 	},
 	{"include",			required_argument, 0,  'i' 	},
 	{"exclude",			required_argument, 0,  'x' 	},
+	{"no-warnings",		no_argument,       0,  '\0'	},
 	{"output",			required_argument, 0,  'o' 	},
 	{0,         		0,                 0,   0 	}
 };
@@ -211,6 +212,12 @@ struct helpline SH[] = {
 	"FILE",
 	"names in <FILE> will not have their games included"},
 
+{	'\0',
+	"no-warnings",
+	no_argument,
+	NULL,
+	"supress warnings of names that do not match using -x or -i"},
+
 {	'o',
 	"output",
 	required_argument,
@@ -303,6 +310,9 @@ int main (int argc, char *argv[])
 			case '\0':
 						if (!strcmp(long_options[longoidx].name, "silent")) {
 							flag.quietmode = TRUE;
+						} else
+						if (!strcmp(long_options[longoidx].name, "no-warnings")) {
+							flag.dowarning = FALSE;
 						} else {
 							fprintf (stderr, "ERROR: %d\n", op);
 							exit(EXIT_FAILURE);
@@ -430,8 +440,6 @@ int main (int argc, char *argv[])
 	}
 
 	/*--------------------*/
-
-	flag.dowarning = TRUE;
 
 	ret = main2	( psl
 				, &flag

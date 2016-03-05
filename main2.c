@@ -37,7 +37,7 @@ flags_reset(struct FLAGS *f)
 {
 	assert(f);
 	f->quietmode = FALSE;
-	f->dowarning = FALSE;
+	f->dowarning = TRUE;
 	f->discard_mode = FALSE; 	
 	f->min_percentage_use = FALSE;
 	f->min_gamesplayed_use = FALSE;
