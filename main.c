@@ -29,6 +29,8 @@
 
 #include "strlist.h"
 
+#include "justify.h"
+
 /*
 |
 |	GENERAL OPTIONS
@@ -244,6 +246,8 @@ static void
 printlonghelp (FILE *outf, struct helpline *h)
 {
 	char head[80];
+	int	 left_tab = 22;
+	int	 right_tab = 80;
 
 	fprintf (outf, "\n");
 	while (h->helpstr != NULL) {
@@ -261,10 +265,9 @@ printlonghelp (FILE *outf, struct helpline *h)
 					h->has_arg==optional_argument && h->longc!=NULL?"]":""
 		);
 		
-		fprintf (outf, "%-21s %s\n", 
-					head, 
-					h->helpstr
-		);
+		fprintf (outf, "%-*s ", left_tab-1, head);
+		fprint_justified (outf, h->helpstr, 0, left_tab, right_tab - left_tab);
+		fprintf (outf, "\n");
 		h++;
 	}
 	fprintf (outf, "\n");
