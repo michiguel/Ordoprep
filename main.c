@@ -121,11 +121,11 @@ static long int	Min_gamesplayed = 0;
 //
 
 struct helpline {
-	int c;
-	const char * longc;
-	int has_arg;
-	const char *argstr;
-	const char *helpstr;
+	int 			c;
+	const char * 	longc;
+	int 			has_arg;
+	const char *	argstr;
+	const char *	helpstr;
 };
 
 struct helpline SH[] = {
