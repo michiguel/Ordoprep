@@ -139,7 +139,7 @@ struct helpline SH[] = {
 {'\0',	"silent",			no_argument,		NULL,	"same as --quiet"},
 {'d',	"no-perfects",		no_argument,		NULL,	"discard players with no wins or no losses"},
 {'m',	"min-perf",			required_argument,	"NUM",	"discard players with a % performance lower than <NUM>"},
-{'g',	"min-games",		required_argument,	"NUM",	"discard players with less than <NUM> number of games played"},
+{'g',	"min-games",		required_argument,	"NUM",	"discard players with less than <NUM> games played"},
 {'p',	"pgn",				required_argument,	"FILE",	"input file in PGN format"},
 {'P',	"pgn-list",			required_argument,	"FILE",	"text file with a list of input PGN files"},
 {'Y',	"aliases",			required_argument,	"FILE",	"name synonyms (csv format). Each line: main,syn1,syn2 etc."},
