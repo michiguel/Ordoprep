@@ -66,30 +66,6 @@ static void usage (void);
 
 	/*	 ....5....|....5....|....5....|....5....|....5....|....5....|....5....|....5....|*/
 
-static struct option *long_options;
-#if 0
-static struct option  long_options[] = {
-	{"help", 			no_argument,       0,  'h'	},
-	{"version",			no_argument,       0,  'v'	},
-	{"show-switches",	no_argument,       0,  'H'	},
-	{"license",			no_argument,       0,  'L'	},
-	{"quiet",			no_argument,       0,  'q'	},
-	{"silent",			no_argument,       0,  '\0' },
-	{"no-perfects",		no_argument,       0,  'd'	},
-	{"min-perf",		required_argument, 0,  'm' 	},
-	{"min-games",		required_argument, 0,  'g' 	},
-	{"pgn",				required_argument, 0,  'p' 	},
-	{"pgn-list",		required_argument, 0,  'P' 	},
-	{"aliases",			required_argument, 0,  'Y' 	},
-	{"include",			required_argument, 0,  'i' 	},
-	{"exclude",			required_argument, 0,  'x' 	},
-	{"remaining",		required_argument, 0,  '\0'	},
-	{"no-warnings",		no_argument,       0,  '\0'	},
-	{"output",			required_argument, 0,  'o' 	},
-	{0,         		0,                 0,   0 	}
-};
-#endif
-
 	static const char *copyright_str = 
 		"Copyright (c) 2016 Miguel A. Ballicora\n"
 		"There is NO WARRANTY of any kind\n"
@@ -108,8 +84,6 @@ static struct option  long_options[] = {
 	/*	 ....5....|....5....|....5....|....5....|....5....|....5....|....5....|....5....|*/
 		;
 
-const char *OPTION_LIST = "vhHdm:g:p:P:qLo:Y:i:x:";
-
 /*
 |
 |	VARIABLES
@@ -124,6 +98,10 @@ static double 	Min_percentage  = 0.0;
 static long int	Min_gamesplayed = 0;
 
 //
+
+char OPTION_LIST[1024];
+
+static struct option *long_options;
 
 struct helpline {
 	int 			c;
@@ -158,31 +136,56 @@ struct helpline SH[] = {
 
 #include <stddef.h>
 
+static bool_t
+eo_helplist(struct helpline *h)
+{
+	return NULL == h->longc && '\0' == h->c;
+}
+
 static struct option *
 optionlist_new (struct helpline *hl)
 {
 	size_t n;
 	struct option *k, *k_start;
 	struct helpline *i = hl;
-	while (i->longc != NULL && i->c) i++;
+	while (!eo_helplist(i)) i++;
 	n = (size_t)(i - hl + 1);
 
 	if (NULL == (k_start = malloc (sizeof(struct option) * n)))
 		return NULL;
 
-	for (i = hl, k = k_start; i->longc != NULL && i->c; i++, k++) {
+	for (i = hl, k = k_start; !eo_helplist(i); i++, k++) {
 		k->name = i->longc;
 		k->has_arg = i->has_arg;
 		k->flag = i->variable;
 		k->val = i->c;
 	}
-		k->name = NULL;
-		k->has_arg = 0;
-		k->flag = NULL;
-		k->val = 0;
+	k->name = NULL;
+	k->has_arg = 0;
+	k->flag = NULL;
+	k->val = 0;
 
 	return k_start;
 }
+
+static char *
+optionshort_build (struct helpline *hl, char *opt_input)
+{
+	char *opt = opt_input;
+	struct helpline *i = hl;
+
+	for (i = hl, opt = opt_input; !eo_helplist(i); i++) {
+		int c = i->c;
+		if (c != '\0') {
+			*opt++ = (char)c;
+			if (required_argument == i->has_arg) *opt++ = ':';
+		}
+	}
+	*opt++ = '\0';
+
+	return opt_input;
+}
+
 
 static void 
 build_head (char *head, struct helpline *h)
@@ -225,6 +228,7 @@ printlonghelp (FILE *outf, struct helpline *h_inp)
 	}
 	fprintf (outf, "\n");
 }
+
 
 /*
 |
@@ -274,6 +278,8 @@ int main (int argc, char *argv[])
 		fprintf(stderr, "Memory error to initialize options\n");
 		exit(EXIT_FAILURE);
 	}
+
+	optionshort_build(SH, OPTION_LIST);
 
 	while (END_OF_OPTIONS != (op = options_l (argc, argv, OPTION_LIST, long_options, &longoidx))) {
 
