@@ -170,9 +170,9 @@ build_head (char *head, struct helpline *h)
 }
 
 static void
-printlonghelp (FILE *outf, struct helpline *h)
+printlonghelp (FILE *outf, struct helpline *h_inp)
 {
-	struct helpline *h_inp = h;
+	struct helpline *h;
 	char head[80];
 	size_t longest = 0;
 	int	 left_tab;
