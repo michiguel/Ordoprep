@@ -66,7 +66,9 @@ static void usage (void);
 
 	/*	 ....5....|....5....|....5....|....5....|....5....|....5....|....5....|....5....|*/
 
-static struct option long_options[] = {
+static struct option *long_options;
+#if 0
+static struct option  long_options[] = {
 	{"help", 			no_argument,       0,  'h'	},
 	{"version",			no_argument,       0,  'v'	},
 	{"show-switches",	no_argument,       0,  'H'	},
@@ -86,6 +88,7 @@ static struct option long_options[] = {
 	{"output",			required_argument, 0,  'o' 	},
 	{0,         		0,                 0,   0 	}
 };
+#endif
 
 	static const char *copyright_str = 
 		"Copyright (c) 2016 Miguel A. Ballicora\n"
@@ -127,31 +130,59 @@ struct helpline {
 	const char * 	longc;
 	int 			has_arg;
 	const char *	argstr;
+	int	*			variable;
 	const char *	helpstr;
 };
 
 struct helpline SH[] = {
-{'h',	"help",				no_argument,		NULL,	"print this help"},
-{'H',	"show-switches",	no_argument,		NULL,	"print just the switches"},
-{'v',	"version",			no_argument,		NULL,	"print version number and exit"},
-{'L',	"license",			no_argument,		NULL,	"display license information"},
-{'q',	"quiet",			no_argument,		NULL,	"quiet (no screen progress updates)"},
-{'\0',	"silent",			no_argument,		NULL,	"same as --quiet"},
-{'d',	"no-perfects",		no_argument,		NULL,	"discard players with no wins or no losses"},
-{'m',	"min-perf",			required_argument,	"NUM",	"discard players with a % performance lower than <NUM>"},
-{'g',	"min-games",		required_argument,	"NUM",	"discard players with less than <NUM> games played"},
-{'p',	"pgn",				required_argument,	"FILE",	"input file in PGN format"},
-{'P',	"pgn-list",			required_argument,	"FILE",	"text file with a list of input PGN files"},
-{'Y',	"aliases",			required_argument,	"FILE",	"name synonyms (csv format). Each line: main,syn1,syn2 etc."},
-{'i',	"include",			required_argument,	"FILE",	"include only games of participants present in <FILE>"},
-{'x',	"exclude",			required_argument,	"FILE",	"names in <FILE> will not have their games included"},
-{'\0',	"remaining",		required_argument,	"FILE",	"games that were not included in the output"},
-{'\0',	"no-warnings",		no_argument,		NULL,	"supress warnings of names that do not match using -x or -i"},
-{'o',	"output",			required_argument,	"FILE",	"output file (text format). Default output goes to screen"},
-{0,		NULL,				0,					NULL,	NULL},
+{'h',	"help",				no_argument,		NULL,	0,	"print this help"},
+{'H',	"show-switches",	no_argument,		NULL,	0,	"print just the switches"},
+{'v',	"version",			no_argument,		NULL,	0,	"print version number and exit"},
+{'L',	"license",			no_argument,		NULL,	0,	"display license information"},
+{'q',	"quiet",			no_argument,		NULL,	0,	"quiet (no screen progress updates)"},
+{'\0',	"silent",			no_argument,		NULL,	0,	"same as --quiet"},
+{'d',	"no-perfects",		no_argument,		NULL,	0,	"discard players with no wins or no losses"},
+{'m',	"min-perf",			required_argument,	"NUM",	0,	"discard players with a % performance lower than <NUM>"},
+{'g',	"min-games",		required_argument,	"NUM",	0,	"discard players with less than <NUM> games played"},
+{'p',	"pgn",				required_argument,	"FILE",	0,	"input file in PGN format"},
+{'P',	"pgn-list",			required_argument,	"FILE",	0,	"text file with a list of input PGN files"},
+{'Y',	"aliases",			required_argument,	"FILE",	0,	"name synonyms (csv format). Each line: main,syn1,syn2 etc."},
+{'i',	"include",			required_argument,	"FILE",	0,	"include only games of participants present in <FILE>"},
+{'x',	"exclude",			required_argument,	"FILE",	0,	"names in <FILE> will not have their games included"},
+{'\0',	"remaining",		required_argument,	"FILE",	0,	"games that were not included in the output"},
+{'\0',	"no-warnings",		no_argument,		NULL,	0,	"supress warnings of names that do not match using -x or -i"},
+{'o',	"output",			required_argument,	"FILE",	0,	"output file (text format). Default output goes to screen"},
+{0,		NULL,				0,					NULL,	0,	NULL},
 
 };
 
+#include <stddef.h>
+
+static struct option *
+optionlist_new (struct helpline *hl)
+{
+	size_t n;
+	struct option *k, *k_start;
+	struct helpline *i = hl;
+	while (i->longc != NULL && i->c) i++;
+	n = (size_t)(i - hl + 1);
+
+	if (NULL == (k_start = malloc (sizeof(struct option) * n)))
+		return NULL;
+
+	for (i = hl, k = k_start; i->longc != NULL && i->c; i++, k++) {
+		k->name = i->longc;
+		k->has_arg = i->has_arg;
+		k->flag = i->variable;
+		k->val = i->c;
+	}
+		k->name = NULL;
+		k->has_arg = 0;
+		k->flag = NULL;
+		k->val = 0;
+
+	return k_start;
+}
 
 static void 
 build_head (char *head, struct helpline *h)
@@ -239,6 +270,11 @@ int main (int argc, char *argv[])
 	// reset flags
 	flags_reset(&flag);
 
+	if (NULL == (long_options = optionlist_new (SH))) {
+		fprintf(stderr, "Memory error to initialize options\n");
+		exit(EXIT_FAILURE);
+	}
+
 	while (END_OF_OPTIONS != (op = options_l (argc, argv, OPTION_LIST, long_options, &longoidx))) {
 
 		switch (op) {
@@ -300,6 +336,8 @@ int main (int argc, char *argv[])
 						break;
 		}		
 	}
+
+	free(long_options);
 
 	/*----------------------------------*\
 	|	Return version
