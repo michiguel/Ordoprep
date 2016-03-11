@@ -212,7 +212,7 @@ printlonghelp (FILE *outf, struct helpline *h_inp)
 	int	 left_tab;
 	int	 right_tab = 80;
 
-	for (h = h_inp; h->helpstr != NULL; h++) {
+	for (h = h_inp; !eo_helplist(h); h++) {
 		build_head (head, h);
 		if (longest < strlen(head)) longest = strlen(head);
 	}
@@ -220,7 +220,7 @@ printlonghelp (FILE *outf, struct helpline *h_inp)
 	left_tab = (int)longest + 1;
 
 	fprintf (outf, "\n");
-	for (h = h_inp; h->helpstr != NULL; h++) {
+	for (h = h_inp; !eo_helplist(h); h++) {
 		build_head (head, h);
 		fprintf (outf, "%-*s ", left_tab-1, head);
 		fprint_justified (outf, h->helpstr, 0, left_tab, right_tab - left_tab);
