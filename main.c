@@ -152,36 +152,49 @@ struct helpline SH[] = {
 
 };
 
+
+static void 
+build_head (char *head, struct helpline *h)
+{
+	sprintf (head, " %c%c%s %s%s%s%s%s%s", 
+				h->c!='\0'?'-' :' ',
+				h->c!='\0'?h->c:' ', 
+				h->longc!=NULL && h->c!='\0'?",":" ",
+				h->longc!=NULL?"--":"", 
+				h->longc!=NULL?h->longc:"", 
+				h->has_arg==optional_argument && h->longc!=NULL?"[":"",
+				h->has_arg!=no_argument && h->longc!=NULL? "=" :"",
+				h->has_arg!=no_argument? h->argstr :"",
+				h->has_arg==optional_argument && h->longc!=NULL?"]":""
+	);
+}
+
 static void
 printlonghelp (FILE *outf, struct helpline *h)
 {
+	struct helpline *h_inp = h;
 	char head[80];
-	int	 left_tab = 22;
+	size_t longest = 0;
+	int	 left_tab;
 	int	 right_tab = 80;
 
+	for (h = h_inp; h->helpstr != NULL; h++) {
+		build_head (head, h);
+		if (longest < strlen(head)) longest = strlen(head);
+	}
+
+	left_tab = (int)longest + 1;
+
 	fprintf (outf, "\n");
-	while (h->helpstr != NULL) {
-
-		sprintf (head, " %c%c%s %s%s%s%s%s%s", 
-					h->c!='\0'?'-' :' ',
-					h->c!='\0'?h->c:' ', 
-					h->longc!=NULL && h->c!='\0'?",":" ",
-					h->longc!=NULL?"--":"", 
-					h->longc!=NULL?h->longc:"", 
-
-					h->has_arg==optional_argument && h->longc!=NULL?"[":"",
-					h->has_arg!=no_argument && h->longc!=NULL? "=" :"",
-					h->has_arg!=no_argument? h->argstr :"",
-					h->has_arg==optional_argument && h->longc!=NULL?"]":""
-		);
-		
+	for (h = h_inp; h->helpstr != NULL; h++) {
+		build_head (head, h);
 		fprintf (outf, "%-*s ", left_tab-1, head);
 		fprint_justified (outf, h->helpstr, 0, left_tab, right_tab - left_tab);
 		fprintf (outf, "\n");
-		h++;
 	}
 	fprintf (outf, "\n");
 }
+
 /*
 |
 |	MAIN
