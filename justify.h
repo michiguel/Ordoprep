@@ -22,6 +22,7 @@
 #define H_JUSTI
 /*>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>*/
 
+#include <stdio.h>
 #include "boolean.h"
 
 extern void print_justified (const char *p, int blankheader, int margin, int hor);

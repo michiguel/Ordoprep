@@ -99,18 +99,11 @@ static long int	Min_gamesplayed = 0;
 
 //
 
+#include "myhelp.h"
+
 char OPTION_LIST[1024];
 
 static struct option *long_options;
-
-struct helpline {
-	int 			c;
-	const char * 	longc;
-	int 			has_arg;
-	const char *	argstr;
-	int	*			variable;
-	const char *	helpstr;
-};
 
 struct helpline SH[] = {
 {'h',	"help",				no_argument,		NULL,	0,	"print this help"},
@@ -133,101 +126,6 @@ struct helpline SH[] = {
 {0,		NULL,				0,					NULL,	0,	NULL},
 
 };
-
-#include <stddef.h>
-
-static bool_t
-eo_helplist(struct helpline *h)
-{
-	return NULL == h->longc && '\0' == h->c;
-}
-
-static struct option *
-optionlist_new (struct helpline *hl)
-{
-	size_t n;
-	struct option *k, *k_start;
-	struct helpline *i = hl;
-	while (!eo_helplist(i)) i++;
-	n = (size_t)(i - hl + 1);
-
-	if (NULL == (k_start = malloc (sizeof(struct option) * n)))
-		return NULL;
-
-	for (i = hl, k = k_start; !eo_helplist(i); i++, k++) {
-		k->name = i->longc;
-		k->has_arg = i->has_arg;
-		k->flag = i->variable;
-		k->val = i->c;
-	}
-	k->name = NULL;
-	k->has_arg = 0;
-	k->flag = NULL;
-	k->val = 0;
-
-	return k_start;
-}
-
-static char *
-optionshort_build (struct helpline *hl, char *opt_input)
-{
-	char *opt = opt_input;
-	struct helpline *i = hl;
-
-	for (i = hl, opt = opt_input; !eo_helplist(i); i++) {
-		int c = i->c;
-		if (c != '\0') {
-			*opt++ = (char)c;
-			if (required_argument == i->has_arg) *opt++ = ':';
-		}
-	}
-	*opt++ = '\0';
-
-	return opt_input;
-}
-
-
-static void 
-build_head (char *head, struct helpline *h)
-{
-	sprintf (head, " %c%c%s %s%s%s%s%s%s", 
-				h->c!='\0'?'-' :' ',
-				h->c!='\0'?h->c:' ', 
-				h->longc!=NULL && h->c!='\0'?",":" ",
-				h->longc!=NULL?"--":"", 
-				h->longc!=NULL?h->longc:"", 
-				h->has_arg==optional_argument && h->longc!=NULL?"[":"",
-				h->has_arg!=no_argument && h->longc!=NULL? "=" :"",
-				h->has_arg!=no_argument? h->argstr :"",
-				h->has_arg==optional_argument && h->longc!=NULL?"]":""
-	);
-}
-
-static void
-printlonghelp (FILE *outf, struct helpline *h_inp)
-{
-	struct helpline *h;
-	char head[80];
-	size_t longest = 0;
-	int	 left_tab;
-	int	 right_tab = 80;
-
-	for (h = h_inp; !eo_helplist(h); h++) {
-		build_head (head, h);
-		if (longest < strlen(head)) longest = strlen(head);
-	}
-
-	left_tab = (int)longest + 1;
-
-	fprintf (outf, "\n");
-	for (h = h_inp; !eo_helplist(h); h++) {
-		build_head (head, h);
-		fprintf (outf, "%-*s ", left_tab-1, head);
-		fprint_justified (outf, h->helpstr, 0, left_tab, right_tab - left_tab);
-		fprintf (outf, "\n");
-	}
-	fprintf (outf, "\n");
-}
 
 
 /*
@@ -343,7 +241,7 @@ int main (int argc, char *argv[])
 		}		
 	}
 
-	free(long_options);
+	optionlist_done (long_options);
 
 	/*----------------------------------*\
 	|	Return version
