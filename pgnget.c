@@ -229,9 +229,10 @@ database_getname(const struct DATA *d, player_t i)
 void 
 database_transform(const struct DATA *db, struct GAMES *g, struct PLAYERS *p, struct GAMESTATS *gs)
 {
+	enum maxresults {MAXRESTYPE = 8};
 	player_t j;
 	player_t topn;
-	gamesnum_t gamestat[4] = {0,0,0,0};
+	gamesnum_t gamestat[MAXRESTYPE] = {0,0,0,0,0,0,0,0};
 
 	assert(db && p && g && gs);
 	assert(p->name && p->flagged && p->present_in_games && p->prefed && p->priored && p->performance_type);
@@ -265,7 +266,7 @@ database_transform(const struct DATA *db, struct GAMES *g, struct PLAYERS *p, st
 			g->ga[i].whiteplayer = wp = db->gb[blk]->white[idx];
 			g->ga[i].blackplayer = bp = db->gb[blk]->black[idx]; 
 			g->ga[i].score       =      db->gb[blk]->score[idx];
-			if (g->ga[i].score <= DISCARD) gamestat[g->ga[i].score]++;
+			if (g->ga[i].score < MAXRESTYPE) gamestat[g->ga[i].score]++;
 
 			if (g->ga[i].score < DISCARD) {
 				p->present_in_games[wp] = TRUE;
@@ -284,7 +285,7 @@ database_transform(const struct DATA *db, struct GAMES *g, struct PLAYERS *p, st
 			g->ga[i].whiteplayer = wp = db->gb[blk]->white[idx];
 			g->ga[i].blackplayer = bp = db->gb[blk]->black[idx]; 
 			g->ga[i].score       =      db->gb[blk]->score[idx];
-			if (g->ga[i].score <= DISCARD) gamestat[g->ga[i].score]++;
+			if (g->ga[i].score < MAXRESTYPE) gamestat[g->ga[i].score]++;
 
 			if (g->ga[i].score < DISCARD) {
 				p->present_in_games[wp] = TRUE;
@@ -303,7 +304,11 @@ database_transform(const struct DATA *db, struct GAMES *g, struct PLAYERS *p, st
 	gs->white_wins	= gamestat[WHITE_WIN];
 	gs->draws		= gamestat[RESULT_DRAW];
 	gs->black_wins	= gamestat[BLACK_WIN];
-	gs->noresult	= gamestat[DISCARD];
+	gs->noresult	= gamestat[DISCARD] 
+					+ gamestat[IGNORED|WHITE_WIN]
+					+ gamestat[IGNORED|RESULT_DRAW]
+					+ gamestat[IGNORED|BLACK_WIN]
+					;
 
 	assert ((long)g->n == (gs->white_wins + gs->draws + gs->black_wins + gs->noresult));
 
