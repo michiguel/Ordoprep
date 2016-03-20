@@ -371,52 +371,51 @@ main2	( strlist_t *psl
 		printf ("\n");	
 	}
 
-//-------------------------------- Groups
+	//-------------------------------- Groups
 
-if (groupstr != NULL)
-{
-	struct ENCOUNTERS Encounters;
-	FILE *groupf = NULL;
+	if (groupstr != NULL) {
 
-	groupf = fopen (groupstr, "w");
-	if (groupf == NULL) {
-		fprintf(stderr, "Errors with file: %s\n",groupstr);			
-		exit(EXIT_FAILURE);
-	} else {
-		bool_t ok;
-		player_t groups_n;
-		gamesnum_t intra;
-		gamesnum_t inter;
+		struct ENCOUNTERS Encounters;
+		FILE *groupf = NULL;
 
-		if (encounters_init (Games.n, &Encounters)) {
+		groupf = fopen (groupstr, "w");
+		if (groupf == NULL) {
+			fprintf(stderr, "Errors with file: %s\n",groupstr);			
+			exit(EXIT_FAILURE);
+		} else {
+			bool_t ok;
+			player_t groups_n;
+			gamesnum_t intra;
+			gamesnum_t inter;
 
-			encounters_calculate (ENCOUNTERS_FULL, &Games, Players.flagged, &Encounters);
+			if (encounters_init (Games.n, &Encounters)) {
 
-			ok = groups_process (&Encounters, &Players, groupf, &groups_n, &intra, &inter);
+				encounters_calculate (ENCOUNTERS_FULL, &Games, Players.flagged, &Encounters);
 
-			if (!ok) {
-				fprintf (stderr, "not enough memory for encounters allocation\n");
-				exit(EXIT_FAILURE);
+				ok = groups_process (&Encounters, &Players, groupf, &groups_n, &intra, &inter);
+
+				encounters_done (&Encounters);
+
+				if (!ok) {
+					fprintf (stderr, "not enough memory for encounters allocation\n");
+					exit(EXIT_FAILURE);
+				}
+
+				if (!quietmode) {
+					printf ("Groups=%ld\n", (long)groups_n);
+					printf ("Encounters: Total=%ld, within groups=%ld, @ interface between groups=%ld\n"
+								,(long)Encounters.n, (long)intra, (long)inter);
+				}
+
+				exit(EXIT_SUCCESS);
+
+		 	} else {
+				fprintf (stderr, "Could not initialize Encounters memory\n"); exit(EXIT_FAILURE);
 			}
 
-			if (!quietmode) {
-				printf ("Groups=%ld\n", (long)groups_n);
-				printf ("Encounters: Total=%ld, within groups=%ld, @ interface between groups=%ld\n"
-							,(long)Encounters.n, (long)intra, (long)inter);
-			}
-
-			encounters_done (&Encounters);
-			exit(EXIT_SUCCESS);
-
-	 	} else {
-			fprintf (stderr, "Could not initialize Encounters memory\n"); exit(EXIT_FAILURE);
+			fclose(groupf);
 		}
-
-		fclose(groupf);
 	}
-}
-
-//-------------------------------
 
 	/*==== CALCULATIONS ====*/
 
