@@ -114,7 +114,7 @@ struct helpline SH[] = {
 {'\0',	"silent",			no_argument,		NULL,	0,	"same as --quiet"},
 {'d',	"no-perfects",		no_argument,		NULL,	0,	"discard players with no wins or no losses"},
 {'m',	"min-perf",			required_argument,	"NUM",	0,	"discard players with a % performance lower than <NUM>"},
-{'g',	"min-games",		required_argument,	"NUM",	0,	"discard players with less than <NUM> games played"},
+{'M',	"min-games",		required_argument,	"NUM",	0,	"discard players with less than <NUM> games played"},
 {'p',	"pgn",				required_argument,	"FILE",	0,	"input file in PGN format"},
 {'P',	"pgn-list",			required_argument,	"FILE",	0,	"text file with a list of input PGN files"},
 {'Y',	"aliases",			required_argument,	"FILE",	0,	"name synonyms (csv format). Each line: main,syn1,syn2 etc."},
@@ -123,6 +123,7 @@ struct helpline SH[] = {
 {'\0',	"remaining",		required_argument,	"FILE",	0,	"games that were not included in the output"},
 {'\0',	"no-warnings",		no_argument,		NULL,	0,	"supress warnings of names that do not match using -x or -i"},
 {'o',	"output",			required_argument,	"FILE",	0,	"output file (text format). Default output goes to screen"},
+{'g',	"groups",			required_argument,	"FILE",	0,	"group connection info sent to FILE"},
 {0,		NULL,				0,					NULL,	0,	NULL},
 
 };
@@ -152,7 +153,7 @@ int main (int argc, char *argv[])
 	int op;
 	int longoidx=0;
 
-	const char *single_pgn, *multi_pgn, *textstr, *synstr, *excludes_str, *includes_str, *remainin_str;
+	const char *single_pgn, *multi_pgn, *textstr, *synstr, *excludes_str, *includes_str, *remainin_str, *groupstr;
 	int version_mode, help_mode, switch_mode, license_mode, input_mode;
 
 	/* defaults */
@@ -168,6 +169,7 @@ int main (int argc, char *argv[])
 	includes_str = NULL;
 	remainin_str = NULL;
 	textstr 	 = NULL;
+	groupstr	 = NULL;	
 
 	// reset flags
 	flags_reset(&flag);
@@ -215,6 +217,8 @@ int main (int argc, char *argv[])
 			case 'x': 	excludes_str = opt_arg;
 						break;
 			case 'o': 	textstr = opt_arg;
+						break;
+			case 'G': 	groupstr = opt_arg;
 						break;
 			case 'q':	flag.quietmode = TRUE;	break;
 			case 'd':	flag.discard_mode = TRUE;	break;
@@ -333,6 +337,7 @@ int main (int argc, char *argv[])
 				, includes_str
 				, excludes_str
 				, remainin_str
+				, groupstr
 				);
 
 	/*--------------------*/
