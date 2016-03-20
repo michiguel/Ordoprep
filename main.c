@@ -218,7 +218,7 @@ int main (int argc, char *argv[])
 						break;
 			case 'o': 	textstr = opt_arg;
 						break;
-			case 'G': 	groupstr = opt_arg;
+			case 'g': 	groupstr = opt_arg;
 						break;
 			case 'q':	flag.quietmode = TRUE;	break;
 			case 'd':	flag.discard_mode = TRUE;	break;
@@ -229,7 +229,7 @@ int main (int argc, char *argv[])
 							flag.min_percentage_use = TRUE;
 						}
 						break;
-			case 'g': 	if (1 != sscanf(opt_arg,"%ld", &Min_gamesplayed)) {
+			case 'M': 	if (1 != sscanf(opt_arg,"%ld", &Min_gamesplayed)) {
 							fprintf(stderr, "wrong min. games played\n");
 							exit(EXIT_FAILURE);
 						} else {
