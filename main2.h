@@ -51,7 +51,9 @@ main2	( strlist_t *psl
 		, const char *includes_str
 		, const char *excludes_str
 		, const char *remainin_str
-		, const char *groupstr
+		, const char *groupstr_inp
+		, const char *group_games_str
+		, const char *group_players_str
 );
 
 /*<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<*/

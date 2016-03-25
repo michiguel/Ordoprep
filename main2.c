@@ -260,6 +260,51 @@ save2pgnf_ignored(struct GAMES *gm, struct PLAYERS *pl, FILE *f)
 }
 
 
+static void	
+save2pgnf_by_group(struct GAMES *gm, struct PLAYERS *pl, FILE *f, player_t *groupid, player_t gid)
+{
+	struct gamei *ga = gm->ga;
+	const char  **name = pl->name;
+	gamesnum_t i;
+	bool_t samegroup;
+
+	const char *result_string[] = {"1-0", "1/2-1/2", "0-1"};
+		
+	for (i = 0; i < gm->n; i++) {
+		int32_t sco = ga[i].score;
+		player_t wh = ga[i].whiteplayer;
+		player_t bl = ga[i].blackplayer;
+
+		samegroup = groupid[wh] == gid && groupid[bl] == gid;
+
+		if (sco < DISCARD && samegroup) {
+			switch (sco) {
+				case WHITE_WIN:
+				case BLACK_WIN:
+				case RESULT_DRAW:
+					fprintf(f, "[White \"%s\"]\n"  , name[wh]    );
+					fprintf(f, "[Black \"%s\"]\n"  , name[bl]    );
+					fprintf(f, "[Result \"%s\"]\n" , result_string[sco] );
+					fprintf(f, "%s\n\n"            , result_string[sco] );
+					break;
+				default:
+					break;
+			}
+		}
+	}		
+
+	return;
+}
+
+static FILE *
+fopen_series (int n, const char *base, const char *mode)
+{
+	char s[1024];
+	sprintf (s,"%s.%d.pgn", base, n);
+	return fopen(s,mode);
+}
+
+
 #include "encount.h"
 #include "groups.h"
 
@@ -276,7 +321,9 @@ main2	( strlist_t *psl
 		, const char *includes_str
 		, const char *excludes_str
 		, const char *remainin_str
-		, const char *groupstr
+		, const char *groupstr_inp
+		, const char *group_games_str
+		, const char *group_players_str
 )
 {
 	struct DATA *pdaba;
@@ -286,6 +333,7 @@ main2	( strlist_t *psl
 	bool_t min_perce = flag->min_percentage_use;
 	bool_t discard_m = flag->discard_mode;
 
+const char *groupstr = groupstr_inp; 
 
 	/*==== set input ====*/
 
@@ -373,8 +421,16 @@ main2	( strlist_t *psl
 
 	//-------------------------------- Groups
 
+/*
+
+groupstr
+group_games_str
+group_players_str
+
+*/
 	if (groupstr != NULL) {
 
+		player_t *groupid = NULL;
 		struct ENCOUNTERS Encounters;
 		FILE *groupf = NULL;
 
@@ -392,7 +448,7 @@ main2	( strlist_t *psl
 
 				encounters_calculate (ENCOUNTERS_FULL, &Games, Players.flagged, &Encounters);
 
-				ok = groups_process (&Encounters, &Players, groupf, &groups_n, &intra, &inter);
+				ok = groups_process (&Encounters, &Players, groupf, &groups_n, &intra, &inter, groupid);
 
 				encounters_done (&Encounters);
 
@@ -406,6 +462,65 @@ main2	( strlist_t *psl
 					printf ("Encounters: Total=%ld, within groups=%ld, @ interface between groups=%ld\n"
 								,(long)Encounters.n, (long)intra, (long)inter);
 				}
+
+				exit(EXIT_SUCCESS);
+
+		 	} else {
+				fprintf (stderr, "Could not initialize Encounters memory\n"); exit(EXIT_FAILURE);
+			}
+
+			fclose(groupf);
+		}
+	}
+
+//-----
+
+	if (group_games_str != NULL) {
+
+		player_t *groupid;
+		struct ENCOUNTERS Encounters;
+		FILE *groupf = NULL;
+
+		{
+			bool_t ok;
+			player_t groups_n;
+			gamesnum_t intra;
+			gamesnum_t inter;
+
+			if (encounters_init (Games.n, &Encounters)) {
+
+				groupid = memnew(sizeof(player_t) * (size_t)Players.n);
+
+				encounters_calculate (ENCOUNTERS_FULL, &Games, Players.flagged, &Encounters);
+
+				ok = groups_process (&Encounters, &Players, groupf, &groups_n, &intra, &inter, groupid);
+
+				encounters_done (&Encounters);
+
+				if (!ok) {
+					fprintf (stderr, "not enough memory for encounters allocation\n");
+					exit(EXIT_FAILURE);
+				}
+
+				if (!quietmode) {
+					printf ("Groups=%ld\n", (long)groups_n);
+					printf ("Encounters: Total=%ld, within groups=%ld, @ interface between groups=%ld\n"
+								,(long)Encounters.n, (long)intra, (long)inter);
+				}
+
+				if (groupid) {
+					FILE *f;
+					int g;
+					for (g = 0; g < groups_n; g++) {
+						if (NULL != (f = fopen_series(g+1,group_games_str,"w"))) {
+							printf ("saving... group=%d\n",g+1);	
+							save2pgnf_by_group (&Games, &Players, f, groupid, g+1);
+							fclose(f);
+						}
+					}
+				}
+
+				memrel(groupid);
 
 				exit(EXIT_SUCCESS);
 

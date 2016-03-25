@@ -124,9 +124,12 @@ struct helpline SH[] = {
 {'\0',	"no-warnings",		no_argument,		NULL,	0,	"supress warnings of names that do not match using -x or -i"},
 {'o',	"output",			required_argument,	"FILE",	0,	"output file (text format). Default output goes to screen"},
 {'g',	"groups",			required_argument,	"FILE",	0,	"group connection info sent to FILE"},
+{'\0',	"group-games",		required_argument,	"FILE",	0,	"divide games from unconnected groups into --> FILE.*.pgn"},
+{'\0',	"group-players",	required_argument,	"FILE",	0,	"divide players (unconnected) into files --> FILE.*.txt"},
 {0,		NULL,				0,					NULL,	0,	NULL},
 
 };
+
 
 
 /*
@@ -154,6 +157,8 @@ int main (int argc, char *argv[])
 	int longoidx=0;
 
 	const char *single_pgn, *multi_pgn, *textstr, *synstr, *excludes_str, *includes_str, *remainin_str, *groupstr;
+	const char *group_games_str, *group_players_str;
+
 	int version_mode, help_mode, switch_mode, license_mode, input_mode;
 
 	/* defaults */
@@ -170,7 +175,8 @@ int main (int argc, char *argv[])
 	remainin_str = NULL;
 	textstr 	 = NULL;
 	groupstr	 = NULL;	
-
+	group_games_str = NULL;
+	group_players_str = NULL;
 	// reset flags
 	flags_reset(&flag);
 
@@ -193,7 +199,16 @@ int main (int argc, char *argv[])
 						} else
 						if (!strcmp(long_options[longoidx].name, "remaining")) {
 							remainin_str = opt_arg;
-						} else {
+						} else 
+						if (!strcmp(long_options[longoidx].name, "group-games")) {
+							group_games_str = opt_arg;
+						} else 
+						if (!strcmp(long_options[longoidx].name, "group-players")) {
+							group_players_str = opt_arg;
+printf("NOT IMPLEMENTED\n");
+exit(EXIT_FAILURE); //FIXME
+						} else 
+						{
 							fprintf (stderr, "ERROR: %d\n", op);
 							exit(EXIT_FAILURE);
 						}
@@ -338,6 +353,8 @@ int main (int argc, char *argv[])
 				, excludes_str
 				, remainin_str
 				, groupstr
+				, group_games_str
+				, group_players_str
 				);
 
 	/*--------------------*/
