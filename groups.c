@@ -610,7 +610,7 @@ groups_counter (group_var_t *gv)
 
 
 player_t
-convert_to_groups (FILE *f, group_var_t *gv, player_t n_plyrs, const char **name, const struct PLAYERS *players, const struct ENCOUNTERS *encounters)
+groupvar_build (group_var_t *gv, player_t n_plyrs, const char **name, const struct PLAYERS *players, const struct ENCOUNTERS *encounters)
 {
 	player_t i;
 	gamesnum_t e;
@@ -651,6 +651,7 @@ convert_to_groups (FILE *f, group_var_t *gv, player_t n_plyrs, const char **name
 	finish_it(gv);
 	final_assign_newid (gv);
 
+#if 0
 	if (NULL != f) {
 		if (groups_counter(gv) > 1) {
 			fprintf (f,"Group connectivity: **FAILED**\n");
@@ -662,13 +663,14 @@ convert_to_groups (FILE *f, group_var_t *gv, player_t n_plyrs, const char **name
 
 		}	
 	}
+#endif
 
 	return groups_counter(gv) ;
 }
 
 
 static void
-sieve_encounters	( group_var_t *gv
+groupvar_sieveenc	( group_var_t *gv
 					, const struct ENC *enc
 					, gamesnum_t n_enc
 					, gamesnum_t *N_enca
@@ -1233,6 +1235,33 @@ group_output (FILE *f, group_var_t *gv, group_t *s)
 
 //-----------------------------------------------------------------------------------
 
+static void
+groupvar_output_info (group_var_t *gv, FILE *groupf)
+{
+	if (NULL != groupf) {
+		if (groups_counter(gv) > 1) {
+			fprintf (groupf,"Group connectivity: **FAILED**\n");
+			final_list_output(groupf, gv);
+		} else {
+			assert (1 == groups_counter(gv));
+			fprintf (groupf,"Group connectivity: **PASSED**\n");
+			fprintf (groupf,"All players are connected into only one group.\n");
+		}	
+	}
+}
+
+static void
+groupvar_to_groupid(group_var_t *gv, player_t *groupid_out)
+{
+	if (groupid_out) {
+		player_t i;
+		for (i = 0; i < gv->nplayers; i++) {
+			groupid_out[i] = gv->getnewid[group_belonging(gv,i)];
+		}
+	}
+}
+
+
 bool_t
 groups_process
 		( const struct ENCOUNTERS *encounters
@@ -1255,14 +1284,11 @@ groups_process
 		assert (encounters->n > 0);
 
 		if (groupvar_init (gv, players->n, encounters->n)) {
-			n = convert_to_groups(groupf, gv, players->n, players->name, players, encounters);
-			sieve_encounters (gv, encounters->enc, encounters->n, pN_intra, pN_inter);
-			if (groupid_out) {
-				player_t i;
-				for (i = 0; i < players->n; i++) {
-					groupid_out[i] = gv->getnewid[group_belonging(gv,i)];
-				}
-			}	
+			n = groupvar_build(gv, players->n, players->name, players, encounters);
+			assert(players->n == gv->nplayers);
+			groupvar_sieveenc (gv, encounters->enc, encounters->n, pN_intra, pN_inter);
+			groupvar_to_groupid(gv, groupid_out);
+			groupvar_output_info (gv, groupf);
 			ok = TRUE;
 			groupvar_done (gv);
 		} else {
@@ -1291,7 +1317,7 @@ groups_process_to_count
 	assert (encounters->n > 0);
 
 	if (groupvar_init (gv, players->n, encounters->n)) {
-		n = convert_to_groups(NULL, gv, players->n, players->name, players, encounters);
+		n = groupvar_build(gv, players->n, players->name, players, encounters);
 		ok = TRUE;
 		groupvar_done (gv);
 	} else {
@@ -1317,7 +1343,7 @@ groups_are_ok
 	assert (encounters->n > 0);
 
 	if (groupvar_init (gv, players->n, encounters->n)) {
-		n = convert_to_groups(NULL, gv, players->n, players->name, players, encounters);
+		n = groupvar_build(gv, players->n, players->name, players, encounters);
 		ok = (1 == n) || 1 == non_empty_groups_population(gv, players); // single ones have been purged;
 		groupvar_done (gv);
 	} else {

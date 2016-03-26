@@ -102,7 +102,7 @@ typedef struct GROUPVAR group_var_t;
 
 
 
-extern player_t	convert_to_groups(FILE *f, group_var_t *gv, player_t N_plyers, const char **name, const struct PLAYERS *players, const struct ENCOUNTERS *encounters);
+extern player_t	groupvar_build(group_var_t *gv, player_t N_plyers, const char **name, const struct PLAYERS *players, const struct ENCOUNTERS *encounters);
 
 extern bool_t 	groupvar_init (group_var_t *gv, player_t nplayers, gamesnum_t nenc);
 
