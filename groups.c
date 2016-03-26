@@ -540,26 +540,26 @@ scan_encounters ( const struct ENC *enc, gamesnum_t n_enc
 	return;
 }
 
-static bool_t node_is_occupied (player_t x) {return GV.node[x].group != NULL;}
+static bool_t node_is_occupied (group_var_t *gv, player_t x) {return gv->node[x].group != NULL;}
 
 static void
-node_add_group (player_t x)
+node_add_group (group_var_t *gv, player_t x)
 {
 	group_t *g;
-	assert (!node_is_occupied(x)); 
-	if (NULL == (g = groupset_find (&GV, GV.groupbelong[x]))) {
-		g = group_reset(group_new(&GV));	
-		g->id = GV.groupbelong[x];
-		groupset_add(&GV,g);
+	assert (!node_is_occupied(gv,x)); 
+	if (NULL == (g = groupset_find (gv, gv->groupbelong[x]))) {
+		g = group_reset(group_new(gv));	
+		g->id = gv->groupbelong[x];
+		groupset_add(gv,g);
 	}
-	assert (g->id == GV.groupbelong[x]);
-	GV.node[x].group = g;
+	assert (g->id == gv->groupbelong[x]);
+	gv->node[x].group = g;
 }
 
 static player_t
-group_belonging (player_t x)
+group_belonging (group_var_t *gv, player_t x)
 {
-	group_t *g = group_pointed_by_node (&GV.node[x]);
+	group_t *g = group_pointed_by_node (&gv->node[x]);
 	return NULL == g? NO_ID: g->id;
 }
 
@@ -596,8 +596,8 @@ sup_enc2group (struct ENC *pe, group_var_t *gv)
 	iwin = get_iwin(pe);
 	ilos = get_ilos(pe);
 
-	if (!node_is_occupied (iwin)) node_add_group (iwin);
-	if (!node_is_occupied (ilos)) node_add_group (ilos);
+	if (!node_is_occupied (gv,iwin)) node_add_group (gv,iwin);
+	if (!node_is_occupied (gv,ilos)) node_add_group (gv,ilos);
 
 	add_beat_connection	(gv->node[iwin].group, &gv->node[ilos]);
 	add_lost_connection	(gv->node[ilos].group, &gv->node[iwin]);
@@ -634,54 +634,54 @@ convert_to_groups (FILE *f, player_t n_plyrs, const char **name, const struct PL
 	player_t i;
 	gamesnum_t e;
 
-	scan_encounters(encounters->enc, encounters->n, GV.groupbelong, players->n, SP.SE2, &SP.N_se2); 
+group_var_t *gv = &GV; //FIXME
+
+	scan_encounters(encounters->enc, encounters->n, gv->groupbelong, players->n, SP.SE2, &SP.N_se2); 
 
 	convert_general_init (n_plyrs);
 	
 	// Initiate groups from critical "super" encounters
 	for (e = 0 ; e < SP.N_se2; e++) {
-		sup_enc2group (&SP.SE2[e], &GV);
+		sup_enc2group (&SP.SE2[e], gv);
 	}
 
 	// Initiate groups for each player present in the database that did not have 
 	// critical super encounters
 	for (i = 0; i < n_plyrs; i++) {
-		if (players->present_in_games[i] && !node_is_occupied (i)) 
-			node_add_group (i);
+		if (players->present_in_games[i] && !node_is_occupied (gv,i)) 
+			node_add_group (gv,i);
 	}
 
 	// for all the previous added groups, add respective list of participants
 	for (i = 0; i < n_plyrs; i++) {
-		if (node_is_occupied(i)) {
-			group_t *g = groupset_find(&GV, GV.groupbelong[i]);
+		if (node_is_occupied(gv,i)) {
+			group_t *g = groupset_find(gv, gv->groupbelong[i]);
 			if (g) add_participant(g, i, name[i]);	
 		}
 	}
 
-	assert(groupset_sanity_check_nocombines(&GV));
+	assert(groupset_sanity_check_nocombines(gv));
 
-	simplify_all(&GV);
-	finish_it(&GV);
-
-	final_assign_newid (&GV);
+	simplify_all(gv);
+	finish_it(gv);
+	final_assign_newid (gv);
 
 	if (NULL != f) {
-		if (groups_counter(&GV) > 1) {
+		if (groups_counter(gv) > 1) {
 			fprintf (f,"Group connectivity: **FAILED**\n");
-			final_list_output(f, &GV);
+			final_list_output(f, gv);
 		} else {
-			assert (1 == groups_counter(&GV));
+			assert (1 == groups_counter(gv));
 			fprintf (f,"Group connectivity: **PASSED**\n");
 			fprintf (f,"All players are connected into only one group.\n");
 
 		}	
 	}
 
-	return groups_counter(&GV) ;
+	return groups_counter(gv) ;
 }
 
 
-// no globals
 static void
 sieve_encounters	( const struct ENC *enc
 					, gamesnum_t n_enc
@@ -696,7 +696,7 @@ sieve_encounters	( const struct ENC *enc
 	for (e = 0; e < n_enc; e++) {
 		w = enc[e].wh; 
 		b = enc[e].bl; 
-		if (group_belonging(w) == group_belonging(b)) {
+		if (group_belonging(&GV,w) == group_belonging(&GV,b)) {
 			na += 1;
 		} else {
 			nb += 1;
@@ -1269,7 +1269,7 @@ groups_process
 			if (groupid_out) {
 				player_t i;
 				for (i = 0; i < players->n; i++) {
-					groupid_out[i] = GV.getnewid[group_belonging(i)];
+					groupid_out[i] = GV.getnewid[group_belonging(&GV,i)];
 				}
 			}	
 
