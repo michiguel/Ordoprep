@@ -30,13 +30,6 @@
 
 #define NO_ID -1
 
-
-
-
-static struct GROUP_BUFFER 			Group_buffer;
-static struct PARTICIPANT_BUFFER	Participant_buffer;
-static struct CONNECT_BUFFER		Connection_buffer;
-
 static bool_t	group_buffer_init (struct GROUP_BUFFER *g, player_t n);
 static void		group_buffer_done (struct GROUP_BUFFER *g);
 static bool_t	participant_buffer_init (struct PARTICIPANT_BUFFER *x, player_t n);
@@ -67,6 +60,11 @@ struct GROUPVAR {
 	player_t		groupfinallist_n;
 	node_t	*		node;
 	player_t *		gchain;
+
+	struct GROUP_BUFFER 		groupbuffer;
+	struct PARTICIPANT_BUFFER	participantbuffer;
+	struct CONNECT_BUFFER		connectionbuffer;
+
 };
 
 typedef struct GROUPVAR group_var_t;
@@ -78,18 +76,18 @@ static group_var_t GV;
 
 static void				simplify_all (void);
 static void				finish_it (void);
-static void 			connect_init (void) {Connection_buffer.n = 0;}
+static void 			connect_init (void) {GV.connectionbuffer.n = 0;}
 static connection_t *	connection_new (void) 
 {
-	assert (Connection_buffer.n < Connection_buffer.max);
-	return &Connection_buffer.list[Connection_buffer.n++];
+	assert (GV.connectionbuffer.n < GV.connectionbuffer.max);
+	return &GV.connectionbuffer.list[GV.connectionbuffer.n++];
 }
 
-static void 			participant_init (void) {Participant_buffer.n = 0;}
+static void 			participant_init (void) {GV.participantbuffer.n = 0;}
 static participant_t *	participant_new (void) 
 {
-	assert (Participant_buffer.n < Participant_buffer.max);	
-	return &Participant_buffer.list[Participant_buffer.n++];
+	assert (GV.participantbuffer.n < GV.participantbuffer.max);	
+	return &GV.participantbuffer.list[GV.participantbuffer.n++];
 }
 
 // prototypes
@@ -109,7 +107,7 @@ static bool_t
 groupset_sanity_check(void)
 { 
 	// verify g is properly double-linked
-	group_t *g = Group_buffer.prehead;
+	group_t *g = GV.groupbuffer.prehead;
 	if (g == NULL) return FALSE;
 	for (g = g->next; g != NULL; g = g->next) {
 		if (g->prev == NULL) return FALSE;
@@ -121,7 +119,7 @@ static bool_t
 groupset_sanity_check_nocombines(void)
 { 
 	// verify g is properly double-linked
-	group_t *g = Group_buffer.prehead;
+	group_t *g = GV.groupbuffer.prehead;
 	if (g == NULL) return FALSE;
 	for (g = g->next; g != NULL; g = g->next) {
 		if (g->combined != NULL) return FALSE;
@@ -133,14 +131,14 @@ groupset_sanity_check_nocombines(void)
 static void 
 groupset_init (void) 
 {
-	Group_buffer.tail    = &Group_buffer.list[0];
-	Group_buffer.prehead = &Group_buffer.list[0];
-	group_reset(Group_buffer.prehead);
-	Group_buffer.n = 1;
+	GV.groupbuffer.tail    = &GV.groupbuffer.list[0];
+	GV.groupbuffer.prehead = &GV.groupbuffer.list[0];
+	group_reset(GV.groupbuffer.prehead);
+	GV.groupbuffer.n = 1;
 }
 
-static group_t * groupset_tail (void) {return Group_buffer.tail;}
-static group_t * groupset_head (void) {return Group_buffer.prehead->next;}
+static group_t * groupset_tail (void) {return GV.groupbuffer.tail;}
+static group_t * groupset_head (void) {return GV.groupbuffer.prehead->next;}
 
 #if 0
 // for debuggin purposes
@@ -162,7 +160,7 @@ groupset_add (group_t *a)
 	group_t *t = groupset_tail();
 	t->next = a;
 	a->prev = t;
-	Group_buffer.tail = a;
+	GV.groupbuffer.tail = a;
 }
 
 static group_t * 
@@ -245,16 +243,16 @@ supporting_groupmem_init (player_t nplayers, gamesnum_t nenc)
 
 	GV.nplayers = nplayers;
 
-	if (!group_buffer_init (&Group_buffer, nplayers)) {
+	if (!group_buffer_init (&GV.groupbuffer, nplayers)) {
 		return FALSE;
 	}
-	if (!participant_buffer_init (&Participant_buffer, nplayers)) {
-		 group_buffer_done (&Group_buffer);
+	if (!participant_buffer_init (&GV.participantbuffer, nplayers)) {
+		 group_buffer_done (&GV.groupbuffer);
 		return FALSE;
 	}
-	if (!connection_buffer_init (&Connection_buffer, nenc*2)) {
-		 group_buffer_done (&Group_buffer);
-		 participant_buffer_done (&Participant_buffer);
+	if (!connection_buffer_init (&GV.connectionbuffer, nenc*2)) {
+		 group_buffer_done (&GV.groupbuffer);
+		 participant_buffer_done (&GV.participantbuffer);
 		return FALSE;
 	}
 
@@ -279,9 +277,9 @@ supporting_groupmem_done (void)
 	GV.groupfinallist_n = 0;
 	GV.nplayers = 0;
 
-	group_buffer_done (&Group_buffer);
-	participant_buffer_done (&Participant_buffer);
-	connection_buffer_done (&Connection_buffer);
+	group_buffer_done (&GV.groupbuffer);
+	participant_buffer_done (&GV.participantbuffer);
+	connection_buffer_done (&GV.connectionbuffer);
 
 	return;
 }
@@ -364,7 +362,7 @@ connection_buffer_done (struct CONNECT_BUFFER *x)
 
 static group_t * group_new (void) 
 {
-	return &Group_buffer.list[Group_buffer.n++];
+	return &GV.groupbuffer.list[GV.groupbuffer.n++];
 }
 
 static group_t * group_reset (group_t *g)
