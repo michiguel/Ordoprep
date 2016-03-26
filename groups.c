@@ -373,10 +373,10 @@ static group_t * group_combined (group_t *g)
 
 //no globals
 static void
-add_participant (group_t *g, player_t i, const char *name)
+add_participant (group_var_t *gv, group_t *g, player_t i, const char *name)
 {
 	participant_t *nw;
-	nw = participant_new(&GV);
+	nw = participant_new(gv);
 	nw->next = NULL;
 	nw->name = name;
 	nw->id = i; 
@@ -392,7 +392,7 @@ add_participant (group_t *g, player_t i, const char *name)
 
 //no globals
 static void
-add_beat_connection (group_t *g, struct NODE *pnode)
+add_beat_connection (group_var_t *gv, group_t *g, struct NODE *pnode)
 {
 	player_t group_id;
 	connection_t *nw;
@@ -404,7 +404,7 @@ add_beat_connection (group_t *g, struct NODE *pnode)
 	group_id = pnode->group->id;
 
 	if (g->cstart == NULL) {
-		nw = connection_new(&GV);
+		nw = connection_new(gv);
 		nw->next = NULL;
 		nw->node = pnode;
 		g->cstart = nw; 
@@ -417,7 +417,7 @@ add_beat_connection (group_t *g, struct NODE *pnode)
 			found = nd && nd->group && nd->group->id == group_id;
 		}
 		if (!found) {
-			nw = connection_new(&GV);
+			nw = connection_new(gv);
 			nw->next = NULL;
 			nw->node = pnode;
 			l = g->clast;
@@ -429,7 +429,7 @@ add_beat_connection (group_t *g, struct NODE *pnode)
 
 // no globals
 static void
-add_lost_connection (group_t *g, struct NODE *pnode)
+add_lost_connection (group_var_t *gv, group_t *g, struct NODE *pnode)
 {
 	player_t group_id;
 	connection_t *nw;
@@ -441,7 +441,7 @@ add_lost_connection (group_t *g, struct NODE *pnode)
 	group_id = pnode->group->id;
 
 	if (g->lstart == NULL) {
-		nw = connection_new(&GV);
+		nw = connection_new(gv);
 		nw->next = NULL;
 		nw->node = pnode;
 		g->lstart = nw; 
@@ -454,7 +454,7 @@ add_lost_connection (group_t *g, struct NODE *pnode)
 			found = nd && nd->group && nd->group->id == group_id;
 		}
 		if (!found) {
-			nw = connection_new(&GV);
+			nw = connection_new(gv);
 			nw->next = NULL;
 			nw->node = pnode;
 			l = g->llast;
@@ -584,8 +584,8 @@ sup_enc2group (struct ENC *pe, group_var_t *gv)
 	if (!node_is_occupied (gv,iwin)) node_add_group (gv,iwin);
 	if (!node_is_occupied (gv,ilos)) node_add_group (gv,ilos);
 
-	add_beat_connection	(gv->node[iwin].group, &gv->node[ilos]);
-	add_lost_connection	(gv->node[ilos].group, &gv->node[iwin]);
+	add_beat_connection	(gv, gv->node[iwin].group, &gv->node[ilos]);
+	add_lost_connection	(gv, gv->node[ilos].group, &gv->node[iwin]);
 }
 
 static void
@@ -641,7 +641,7 @@ group_var_t *gv = &GV; //FIXME
 	for (i = 0; i < n_plyrs; i++) {
 		if (node_is_occupied(gv,i)) {
 			group_t *g = groupset_find(gv, gv->groupbelong[i]);
-			if (g) add_participant(g, i, name[i]);	
+			if (g) add_participant(gv, g, i, name[i]);	
 		}
 	}
 
