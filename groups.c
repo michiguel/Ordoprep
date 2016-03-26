@@ -50,10 +50,6 @@ struct SUPER {
 
 typedef struct SUPER super_t;
 
-	// groups
-
-static super_t SP;
-
 //----------------------------------------------------------------------
 
 static void				simplify_all (group_var_t *gv);
@@ -619,14 +615,26 @@ convert_to_groups (FILE *f, group_var_t *gv, player_t n_plyrs, const char **name
 	player_t i;
 	gamesnum_t e;
 
-	scan_encounters(encounters->enc, encounters->n, gv->groupbelong, players->n, SP.SE2, &SP.N_se2); 
+super_t SP__;
+super_t *sp = &SP__;
+
+if (supporting_encmem_init (encounters->n, sp)) {
+
+	scan_encounters(encounters->enc, encounters->n, gv->groupbelong, players->n, sp->SE2, &sp->N_se2); 
 
 	convert_general_init (gv, n_plyrs);
 	
 	// Initiate groups from critical "super" encounters
-	for (e = 0 ; e < SP.N_se2; e++) {
-		sup_enc2group (&SP.SE2[e], gv);
+	for (e = 0 ; e < sp->N_se2; e++) {
+		sup_enc2group (&sp->SE2[e], gv);
 	}
+
+	supporting_encmem_done (sp);
+
+} else {
+	fprintf (stderr, "No memory available\n");
+	exit(EXIT_FAILURE);
+}
 
 	// Initiate groups for each player present in the database that did not have 
 	// critical super encounters
@@ -1252,8 +1260,6 @@ groups_process
 		assert (pN_intra && pN_inter);
 		assert (encounters->n > 0);
 
-		if (supporting_encmem_init (encounters->n, &SP)) {
-
 			if (supporting_groupmem_init (gv, players->n, encounters->n)) {
 
 				n = convert_to_groups(groupf, gv, players->n, players->name, players, encounters);
@@ -1272,8 +1278,6 @@ groups_process
 				ok = FALSE;
 			}
 
-			supporting_encmem_done (&SP);
-		} 
 		*pn = n;
 
 		memrel(gv);
@@ -1299,8 +1303,6 @@ group_var_t *gv = &GV;
 	assert (encounters && players && pn);
 	assert (encounters->n > 0);
 
-	if (supporting_encmem_init (encounters->n, &SP)) {
-
 		if (supporting_groupmem_init (gv, players->n, encounters->n)) {
 
 			n = convert_to_groups(NULL, gv, players->n, players->name, players, encounters);
@@ -1309,8 +1311,7 @@ group_var_t *gv = &GV;
 		} else {
 			ok = FALSE;
 		}
-		supporting_encmem_done (&SP);
-	} 
+
 	*pn = n;
 	return ok;
 }
@@ -1331,8 +1332,6 @@ group_var_t *gv = &GV;
 	assert (encounters && players);
 	assert (encounters->n > 0);
 
-	if (supporting_encmem_init (encounters->n, &SP)) {
-
 		if (supporting_groupmem_init (gv, players->n, encounters->n)) {
 
 			n = convert_to_groups(NULL, gv, players->n, players->name, players, encounters);
@@ -1342,7 +1341,6 @@ group_var_t *gv = &GV;
 		} else {
 			ok = FALSE;
 		}
-		supporting_encmem_done (&SP);
-	} 
+
 	return ok;
 }
