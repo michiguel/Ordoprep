@@ -668,7 +668,8 @@ group_var_t *gv = &GV; //FIXME
 
 
 static void
-sieve_encounters	( const struct ENC *enc
+sieve_encounters	( group_var_t *gv
+					, const struct ENC *enc
 					, gamesnum_t n_enc
 					, gamesnum_t *N_enca
 					, gamesnum_t *N_encb
@@ -681,7 +682,7 @@ sieve_encounters	( const struct ENC *enc
 	for (e = 0; e < n_enc; e++) {
 		w = enc[e].wh; 
 		b = enc[e].bl; 
-		if (group_belonging(&GV,w) == group_belonging(&GV,b)) {
+		if (group_belonging(gv,w) == group_belonging(gv,b)) {
 			na += 1;
 		} else {
 			nb += 1;
@@ -1247,7 +1248,7 @@ groups_process
 		if (supporting_groupmem_init (&GV, players->n, encounters->n)) {
 
 			n = convert_to_groups(groupf, players->n, players->name, players, encounters);
-			sieve_encounters (encounters->enc, encounters->n, pN_intra, pN_inter);
+			sieve_encounters (&GV, encounters->enc, encounters->n, pN_intra, pN_inter);
 
 			if (groupid_out) {
 				player_t i;
