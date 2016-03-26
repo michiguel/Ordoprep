@@ -53,7 +53,6 @@ typedef struct SUPER super_t;
 	// groups
 
 static super_t SP;
-static group_var_t GV;
 
 //----------------------------------------------------------------------
 
@@ -1294,6 +1293,7 @@ groups_process_to_count
 	player_t n = 0;
 	bool_t ok = FALSE;
 
+group_var_t GV;
 group_var_t *gv = &GV;
 
 	assert (encounters && players && pn);
@@ -1325,6 +1325,7 @@ groups_are_ok
 	player_t n = 0;
 	bool_t ok = FALSE;
 
+group_var_t GV;
 group_var_t *gv = &GV;
 
 	assert (encounters && players);
