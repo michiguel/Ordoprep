@@ -74,8 +74,8 @@ static group_var_t GV;
 
 //----------------------------------------------------------------------
 
-static void				simplify_all (void);
-static void				finish_it (void);
+static void				simplify_all (group_var_t *gv);
+static void				finish_it (group_var_t *gv);
 static void 			connect_init (void) {GV.connectionbuffer.n = 0;}
 static connection_t *	connection_new (void) 
 {
@@ -91,7 +91,7 @@ static participant_t *	participant_new (void)
 }
 
 // prototypes
-static group_t * 	group_new (void);
+static group_t * 	group_new (group_var_t *gv);
 static group_t * 	group_reset (group_t *g);
 static group_t * 	group_combined (group_t *g);
 static group_t * 	group_pointed_by_conn (connection_t *c);
@@ -360,9 +360,9 @@ connection_buffer_done (struct CONNECT_BUFFER *x)
 
 //----------------------------------------------------------------------------
 
-static group_t * group_new (void) 
+static group_t * group_new (group_var_t *gv) 
 {
-	return &GV.groupbuffer.list[GV.groupbuffer.n++];
+	return &gv->groupbuffer.list[gv->groupbuffer.n++];
 }
 
 static group_t * group_reset (group_t *g)
@@ -548,7 +548,7 @@ node_add_group (player_t x)
 	group_t *g;
 	assert (!node_is_occupied(x)); 
 	if (NULL == (g = groupset_find (&GV, GV.groupbelong[x]))) {
-		g = group_reset(group_new());	
+		g = group_reset(group_new(&GV));	
 		g->id = GV.groupbelong[x];
 		groupset_add(&GV,g);
 	}
@@ -660,8 +660,8 @@ convert_to_groups (FILE *f, player_t n_plyrs, const char **name, const struct PL
 
 	assert(groupset_sanity_check_nocombines(&GV));
 
-	simplify_all();
-	finish_it();
+	simplify_all(&GV);
+	finish_it(&GV);
 
 	final_assign_newid (&GV);
 
@@ -758,11 +758,11 @@ static group_t *group_next (group_t *g)
 }
 
 static void
-simplify_all (void)
+simplify_all (group_var_t *gv)
 {
 	group_t *g;
 
-	g = groupset_head(&GV);
+	g = groupset_head(gv);
 	assert(g);
 
 	while(g) {
@@ -813,6 +813,23 @@ id_pointed_by_conn(connection_t *c)
 	return NULL != c && NULL != (gg = group_pointed_by_conn(c))? gg->id: NO_ID;
 }
 
+static player_t
+find_top_id (group_t *g)
+{
+	connection_t *c;
+	player_t id;
+	player_t topid = g->id;
+	for (c = g->cstart; NULL != c; c = c->next) {
+		id = id_pointed_by_conn(c);
+		if (id > topid) topid = id;
+	}
+	for (c = g->lstart; NULL != c; c = c->next) {
+		id = id_pointed_by_conn(c);
+		if (id > topid) topid = id;
+	}
+	return topid;
+}
+
 static void
 simplify_shrink__ (group_t *g)
 {
@@ -820,6 +837,7 @@ simplify_shrink__ (group_t *g)
 	connection_t 	*c, *p, *pre;
 	player_t		id;
 	connection_t 	pre_connection = {NULL, NULL};
+	player_t		max_player;
 	
 	pre = &pre_connection;
 	assert(g);
@@ -831,10 +849,14 @@ simplify_shrink__ (group_t *g)
 		return;
 	}
 
-	if (!ba_init(&bA, GV.nplayers)) {
+	max_player = 1 + find_top_id(g); // used to be max_player = GV.nplayers;
+
+	if (!ba_init(&bA, max_player)) {
 		fprintf(stderr, "No memory to initialize internal arrays\n");
 		exit(EXIT_FAILURE);			  
 	}
+
+	assert (g->id < max_player);
 
 	// beat list
 	pre->next = g->cstart;
@@ -848,6 +870,7 @@ simplify_shrink__ (group_t *g)
 			p = c;
 			if (id != NO_ID) ba_put(&bA, id);
 		}	
+		assert(id < max_player);
 	}
 
 	g->cstart = pre->next;
@@ -865,6 +888,7 @@ simplify_shrink__ (group_t *g)
 			p = c;
 			if (id != NO_ID) ba_put(&bA, id);
 		}	
+		assert(id < max_player);
 	}
 
 	g->lstart = pre->next;
@@ -981,7 +1005,7 @@ group_next_pointed_by_beat (group_t *g)
 }
 
 static void
-finish_it (void)
+finish_it (group_var_t *gv)
 {
 	bitarray_t 	bA;
 	player_t *chain, *chain_end;
@@ -990,7 +1014,7 @@ finish_it (void)
 	player_t own_id, bi;
 	bool_t startover, combined;
 
-	if (!ba_init(&bA, GV.nplayers)) {
+	if (!ba_init(&bA, gv->nplayers)) {
 		fprintf(stderr, "No memory to initialize internal arrays\n");
 		exit(EXIT_FAILURE);		
 	}
@@ -999,9 +1023,9 @@ finish_it (void)
 		startover = FALSE;
 		combined = FALSE;
 
-		chain = GV.gchain;
+		chain = gv->gchain;
 
-		g = groupset_head(&GV);
+		g = groupset_head(gv);
 		if (g == NULL) break;
 		own_id = g->id; // own id
 
@@ -1018,11 +1042,11 @@ finish_it (void)
 					bi = gp->id;
 					if (ba_ison(&bA, bi)) {
 						//	findprevious bi, combine... remember to include own id;
-						for (chain_end = chain; *chain != bi && chain > GV.gchain; )
+						for (chain_end = chain; *chain != bi && chain > gv->gchain; )
 							chain--;
-						x = group_pointed_by_node(GV.node + own_id);
+						x = group_pointed_by_node(gv->node + own_id);
 						for (; chain < chain_end; chain++) { 
-							group_gocombine (x, group_pointed_by_node(GV.node + *chain));
+							group_gocombine (x, group_pointed_by_node(gv->node + *chain));
 							combined = TRUE;
 						}
 						simplify_shrink_redundancy(x);
@@ -1031,7 +1055,7 @@ finish_it (void)
 				}
 
 			} else {
-				GV.groupfinallist[GV.groupfinallist_n++] = group_unlink(prev_g);
+				gv->groupfinallist[gv->groupfinallist_n++] = group_unlink(prev_g);
 				startover = TRUE;
 			}
 
