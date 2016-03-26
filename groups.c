@@ -48,26 +48,9 @@ struct SUPER {
 	gamesnum_t		N_se2;
 };
 
-	// groups
-
 typedef struct SUPER super_t;
 
-struct GROUPVAR {
-	player_t		nplayers;
-	player_t	*	groupbelong;
-	player_t *		getnewid;
-	group_t **		groupfinallist;
-	player_t		groupfinallist_n;
-	node_t	*		node;
-	player_t *		gchain;
-
-	struct GROUP_BUFFER 		groupbuffer;
-	struct PARTICIPANT_BUFFER	participantbuffer;
-	struct CONNECT_BUFFER		connectionbuffer;
-
-};
-
-typedef struct GROUPVAR group_var_t;
+	// groups
 
 static super_t SP;
 static group_var_t GV;
@@ -195,7 +178,7 @@ supporting_encmem_done (super_t *sp)
 }
 
 bool_t
-supporting_groupmem_init (player_t nplayers, gamesnum_t nenc)
+supporting_groupmem_init (group_var_t *gv, player_t nplayers, gamesnum_t nenc)
 {
 	player_t 	*a;
 	player_t	*b;
@@ -235,24 +218,24 @@ supporting_groupmem_init (player_t nplayers, gamesnum_t nenc)
 		return FALSE;
 	}
 
-	GV.groupbelong = a;
-	GV.getnewid = b;
-	GV.groupfinallist = c;
-	GV.node = d;
-	GV.gchain = e;
+	gv->groupbelong = a;
+	gv->getnewid = b;
+	gv->groupfinallist = c;
+	gv->node = d;
+	gv->gchain = e;
 
-	GV.nplayers = nplayers;
+	gv->nplayers = nplayers;
 
-	if (!group_buffer_init (&GV.groupbuffer, nplayers)) {
+	if (!group_buffer_init (&gv->groupbuffer, nplayers)) {
 		return FALSE;
 	}
-	if (!participant_buffer_init (&GV.participantbuffer, nplayers)) {
-		 group_buffer_done (&GV.groupbuffer);
+	if (!participant_buffer_init (&gv->participantbuffer, nplayers)) {
+		 group_buffer_done (&gv->groupbuffer);
 		return FALSE;
 	}
-	if (!connection_buffer_init (&GV.connectionbuffer, nenc*2)) {
-		 group_buffer_done (&GV.groupbuffer);
-		 participant_buffer_done (&GV.participantbuffer);
+	if (!connection_buffer_init (&gv->connectionbuffer, nenc*2)) {
+		 group_buffer_done (&gv->groupbuffer);
+		 participant_buffer_done (&gv->participantbuffer);
 		return FALSE;
 	}
 
@@ -260,26 +243,28 @@ supporting_groupmem_init (player_t nplayers, gamesnum_t nenc)
 }
 
 void
-supporting_groupmem_done (void)
+supporting_groupmem_done (group_var_t *gv)
 {
-	if (GV.groupbelong)	 	memrel (GV.groupbelong );
-	if (GV.getnewid) 		memrel (GV.getnewid);
-	if (GV.groupfinallist) 	memrel (GV.groupfinallist);
-	if (GV.node) 			memrel (GV.node);
-	if (GV.gchain) 			memrel (GV.gchain);
+	assert(gv);
 
-	GV.groupbelong = NULL;
-	GV.getnewid = NULL;
-	GV.groupfinallist = NULL;
-	GV.node = NULL;
-	GV.gchain = NULL;
+	if (gv->groupbelong)	memrel (gv->groupbelong );
+	if (gv->getnewid) 		memrel (gv->getnewid);
+	if (gv->groupfinallist) memrel (gv->groupfinallist);
+	if (gv->node) 			memrel (gv->node);
+	if (gv->gchain) 		memrel (gv->gchain);
 
-	GV.groupfinallist_n = 0;
-	GV.nplayers = 0;
+	gv->groupbelong = NULL;
+	gv->getnewid = NULL;
+	gv->groupfinallist = NULL;
+	gv->node = NULL;
+	gv->gchain = NULL;
 
-	group_buffer_done (&GV.groupbuffer);
-	participant_buffer_done (&GV.participantbuffer);
-	connection_buffer_done (&GV.connectionbuffer);
+	gv->groupfinallist_n = 0;
+	gv->nplayers = 0;
+
+	group_buffer_done (&gv->groupbuffer);
+	participant_buffer_done (&gv->participantbuffer);
+	connection_buffer_done (&gv->connectionbuffer);
 
 	return;
 }
@@ -609,14 +594,14 @@ group_gocombine (group_t *g, group_t *h);
 
 
 static void
-convert_general_init (player_t n_plyrs)
+convert_general_init (group_var_t *gv, player_t n_plyrs)
 {
 	player_t i;
-	connect_init(&GV);
-	participant_init(&GV);
-	groupset_init(&GV);
+	connect_init(gv);
+	participant_init(gv);
+	groupset_init(gv);
 	for (i = 0; i < n_plyrs; i++) {
-		GV.node[i].group = NULL;
+		gv->node[i].group = NULL;
 	}
 	return;
 }
@@ -638,7 +623,7 @@ group_var_t *gv = &GV; //FIXME
 
 	scan_encounters(encounters->enc, encounters->n, gv->groupbelong, players->n, SP.SE2, &SP.N_se2); 
 
-	convert_general_init (n_plyrs);
+	convert_general_init (gv, n_plyrs);
 	
 	// Initiate groups from critical "super" encounters
 	for (e = 0 ; e < SP.N_se2; e++) {
@@ -961,7 +946,6 @@ simplify (group_t *g)
 		simplify_shrink_redundancy (g);
 		assert(groupset_sanity_check(&GV));
 		if (NULL != (combine_with = find_combine_candidate (g))) {
-			//printf("combine g=%d combine_with=%d\n",g->id, combine_with->id);
 			group_gocombine (g, combine_with);
 		} 
 	} while (combine_with);
@@ -1148,23 +1132,22 @@ group_number_of_actives (group_t *s, const struct PLAYERS *players)
 
 
 static player_t
-non_empty_groups_population (const struct PLAYERS *players)
+non_empty_groups_population (group_var_t *gv, const struct PLAYERS *players)
 {
-	#if 0
-	player_t p;
-	#endif
 	group_t *g;
 	player_t i;
 	player_t x;
 	player_t counter = 0;
 
-	for (i = 0; i < GV.groupfinallist_n; i++) {
-		g = GV.groupfinallist[i];
+	for (i = 0; i < gv->groupfinallist_n; i++) {
+		g = gv->groupfinallist[i];
 		simplify_shrink_redundancy (g);
 		x = group_number_of_actives (g,players);
-		#if 0
-		 p = participants_list_population (g->pstart);
+		#if 0	
+		{
+		 player_t p = participants_list_population (g->pstart);
 		 printf ("population[%ld]=%ld, actives=%ld\n", i, p, x);
+		}	
 		#endif
 		if (x > 0) counter++;
 	}
@@ -1261,7 +1244,7 @@ groups_process
 
 	if (supporting_encmem_init (encounters->n, &SP)) {
 
-		if (supporting_groupmem_init (players->n, encounters->n)) {
+		if (supporting_groupmem_init (&GV, players->n, encounters->n)) {
 
 			n = convert_to_groups(groupf, players->n, players->name, players, encounters);
 			sieve_encounters (encounters->enc, encounters->n, pN_intra, pN_inter);
@@ -1274,7 +1257,7 @@ groups_process
 			}	
 
 			ok = TRUE;
-			supporting_groupmem_done ();
+			supporting_groupmem_done (&GV);
 		} else {
 			ok = FALSE;
 		}
@@ -1301,11 +1284,11 @@ groups_process_to_count
 
 	if (supporting_encmem_init (encounters->n, &SP)) {
 
-		if (supporting_groupmem_init (players->n, encounters->n)) {
+		if (supporting_groupmem_init (&GV, players->n, encounters->n)) {
 
 			n = convert_to_groups(NULL, players->n, players->name, players, encounters);
 			ok = TRUE;
-			supporting_groupmem_done ();
+			supporting_groupmem_done (&GV);
 		} else {
 			ok = FALSE;
 		}
@@ -1330,12 +1313,12 @@ groups_are_ok
 
 	if (supporting_encmem_init (encounters->n, &SP)) {
 
-		if (supporting_groupmem_init (players->n, encounters->n)) {
+		if (supporting_groupmem_init (&GV, players->n, encounters->n)) {
 
 			n = convert_to_groups(NULL, players->n, players->name, players, encounters);
 
-			ok = (1 == n) || 1 == non_empty_groups_population(players); // single ones have been purged;
-			supporting_groupmem_done ();
+			ok = (1 == n) || 1 == non_empty_groups_population(&GV, players); // single ones have been purged;
+			supporting_groupmem_done (&GV);
 		} else {
 			ok = FALSE;
 		}

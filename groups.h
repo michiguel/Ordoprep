@@ -83,11 +83,30 @@ struct CONNECT_BUFFER {
 	gamesnum_t		max;
 };
 
+struct GROUPVAR {
+	player_t		nplayers;
+	player_t	*	groupbelong;
+	player_t *		getnewid;
+	group_t **		groupfinallist;
+	player_t		groupfinallist_n;
+	node_t	*		node;
+	player_t *		gchain;
+
+	struct GROUP_BUFFER 		groupbuffer;
+	struct PARTICIPANT_BUFFER	participantbuffer;
+	struct CONNECT_BUFFER		connectionbuffer;
+
+};
+
+typedef struct GROUPVAR group_var_t;
+
+
+
 extern player_t	convert_to_groups(FILE *f, player_t N_plyers, const char **name, const struct PLAYERS *players, const struct ENCOUNTERS *encounters);
 
-extern bool_t 	supporting_groupmem_init (player_t nplayers, gamesnum_t nenc);
+extern bool_t 	supporting_groupmem_init (group_var_t *gv, player_t nplayers, gamesnum_t nenc);
 
-extern void 	supporting_groupmem_done (void);
+extern void 	supporting_groupmem_done (group_var_t *gv);
 
 extern bool_t	groups_process	( const struct ENCOUNTERS *encounters
 								, const struct PLAYERS *players
