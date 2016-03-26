@@ -225,6 +225,7 @@ supporting_groupmem_init (group_var_t *gv, player_t nplayers, gamesnum_t nenc)
 	gv->gchain = e;
 
 	gv->nplayers = nplayers;
+	gv->groupfinallist_n = 0;
 
 	if (!group_buffer_init (&gv->groupbuffer, nplayers)) {
 		return FALSE;
@@ -753,6 +754,7 @@ simplify_all (group_var_t *gv)
 		simplify(g);
 		g = group_next(g);
 	}
+	assert(groupset_sanity_check(gv));
 	return;
 }
 
@@ -946,7 +948,6 @@ simplify (group_t *g)
 	group_t	*combine_with = NULL;
 	do {
 		simplify_shrink_redundancy (g);
-		assert(groupset_sanity_check(&GV));
 		if (NULL != (combine_with = find_combine_candidate (g))) {
 			group_gocombine (g, combine_with);
 		} 
@@ -1000,10 +1001,15 @@ finish_it (group_var_t *gv)
 	player_t own_id, bi;
 	bool_t startover, combined;
 
+	assert(gv);
+
 	if (!ba_init(&bA, gv->nplayers)) {
 		fprintf(stderr, "No memory to initialize internal arrays\n");
 		exit(EXIT_FAILURE);		
 	}
+
+	assert(gv->groupfinallist_n == 0); // should have been initialized
+	gv->groupfinallist_n = 0;
 
 	do {
 		startover = FALSE;
@@ -1239,36 +1245,41 @@ groups_process
 {
 	player_t n = 0;
 	bool_t ok = FALSE;
+	group_var_t *gv;
 
-group_var_t *gv = &GV;
+	if (NULL != (gv = memnew(sizeof(group_var_t)))) {
 
-	assert (encounters && players && pn);
-	assert (pN_intra && pN_inter);
-	assert (encounters->n > 0);
+		assert (encounters && players && pn);
+		assert (pN_intra && pN_inter);
+		assert (encounters->n > 0);
 
-	if (supporting_encmem_init (encounters->n, &SP)) {
+		if (supporting_encmem_init (encounters->n, &SP)) {
 
-		if (supporting_groupmem_init (gv, players->n, encounters->n)) {
+			if (supporting_groupmem_init (gv, players->n, encounters->n)) {
 
-			n = convert_to_groups(groupf, gv, players->n, players->name, players, encounters);
-			sieve_encounters (gv, encounters->enc, encounters->n, pN_intra, pN_inter);
+				n = convert_to_groups(groupf, gv, players->n, players->name, players, encounters);
+				sieve_encounters (gv, encounters->enc, encounters->n, pN_intra, pN_inter);
 
-			if (groupid_out) {
-				player_t i;
-				for (i = 0; i < players->n; i++) {
-					groupid_out[i] = gv->getnewid[group_belonging(gv,i)];
-				}
-			}	
+				if (groupid_out) {
+					player_t i;
+					for (i = 0; i < players->n; i++) {
+						groupid_out[i] = gv->getnewid[group_belonging(gv,i)];
+					}
+				}	
 
-			ok = TRUE;
-			supporting_groupmem_done (gv);
-		} else {
-			ok = FALSE;
-		}
+				ok = TRUE;
+				supporting_groupmem_done (gv);
+			} else {
+				ok = FALSE;
+			}
 
-		supporting_encmem_done (&SP);
-	} 
-	*pn = n;
+			supporting_encmem_done (&SP);
+		} 
+		*pn = n;
+
+		memrel(gv);
+	}
+
 	return ok;
 }
 
