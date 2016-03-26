@@ -1240,26 +1240,28 @@ groups_process
 	player_t n = 0;
 	bool_t ok = FALSE;
 
+group_var_t *gv = &GV;
+
 	assert (encounters && players && pn);
 	assert (pN_intra && pN_inter);
 	assert (encounters->n > 0);
 
 	if (supporting_encmem_init (encounters->n, &SP)) {
 
-		if (supporting_groupmem_init (&GV, players->n, encounters->n)) {
+		if (supporting_groupmem_init (gv, players->n, encounters->n)) {
 
-			n = convert_to_groups(groupf, &GV, players->n, players->name, players, encounters);
-			sieve_encounters (&GV, encounters->enc, encounters->n, pN_intra, pN_inter);
+			n = convert_to_groups(groupf, gv, players->n, players->name, players, encounters);
+			sieve_encounters (gv, encounters->enc, encounters->n, pN_intra, pN_inter);
 
 			if (groupid_out) {
 				player_t i;
 				for (i = 0; i < players->n; i++) {
-					groupid_out[i] = GV.getnewid[group_belonging(&GV,i)];
+					groupid_out[i] = gv->getnewid[group_belonging(gv,i)];
 				}
 			}	
 
 			ok = TRUE;
-			supporting_groupmem_done (&GV);
+			supporting_groupmem_done (gv);
 		} else {
 			ok = FALSE;
 		}
@@ -1281,16 +1283,18 @@ groups_process_to_count
 	player_t n = 0;
 	bool_t ok = FALSE;
 
+group_var_t *gv = &GV;
+
 	assert (encounters && players && pn);
 	assert (encounters->n > 0);
 
 	if (supporting_encmem_init (encounters->n, &SP)) {
 
-		if (supporting_groupmem_init (&GV, players->n, encounters->n)) {
+		if (supporting_groupmem_init (gv, players->n, encounters->n)) {
 
-			n = convert_to_groups(NULL, &GV, players->n, players->name, players, encounters);
+			n = convert_to_groups(NULL, gv, players->n, players->name, players, encounters);
 			ok = TRUE;
-			supporting_groupmem_done (&GV);
+			supporting_groupmem_done (gv);
 		} else {
 			ok = FALSE;
 		}
@@ -1310,17 +1314,19 @@ groups_are_ok
 	player_t n = 0;
 	bool_t ok = FALSE;
 
+group_var_t *gv = &GV;
+
 	assert (encounters && players);
 	assert (encounters->n > 0);
 
 	if (supporting_encmem_init (encounters->n, &SP)) {
 
-		if (supporting_groupmem_init (&GV, players->n, encounters->n)) {
+		if (supporting_groupmem_init (gv, players->n, encounters->n)) {
 
-			n = convert_to_groups(NULL, &GV, players->n, players->name, players, encounters);
+			n = convert_to_groups(NULL, gv, players->n, players->name, players, encounters);
 
-			ok = (1 == n) || 1 == non_empty_groups_population(&GV, players); // single ones have been purged;
-			supporting_groupmem_done (&GV);
+			ok = (1 == n) || 1 == non_empty_groups_population(gv, players); // single ones have been purged;
+			supporting_groupmem_done (gv);
 		} else {
 			ok = FALSE;
 		}
