@@ -173,7 +173,7 @@ supporting_encmem_done (super_t *sp)
 }
 
 bool_t
-supporting_groupmem_init (group_var_t *gv, player_t nplayers, gamesnum_t nenc)
+groupvar_init (group_var_t *gv, player_t nplayers, gamesnum_t nenc)
 {
 	player_t 	*a;
 	player_t	*b;
@@ -239,7 +239,7 @@ supporting_groupmem_init (group_var_t *gv, player_t nplayers, gamesnum_t nenc)
 }
 
 void
-supporting_groupmem_done (group_var_t *gv)
+groupvar_done (group_var_t *gv)
 {
 	assert(gv);
 
@@ -1254,7 +1254,7 @@ groups_process
 		assert (pN_intra && pN_inter);
 		assert (encounters->n > 0);
 
-		if (supporting_groupmem_init (gv, players->n, encounters->n)) {
+		if (groupvar_init (gv, players->n, encounters->n)) {
 			n = convert_to_groups(groupf, gv, players->n, players->name, players, encounters);
 			sieve_encounters (gv, encounters->enc, encounters->n, pN_intra, pN_inter);
 			if (groupid_out) {
@@ -1264,7 +1264,7 @@ groups_process
 				}
 			}	
 			ok = TRUE;
-			supporting_groupmem_done (gv);
+			groupvar_done (gv);
 		} else {
 			ok = FALSE;
 		}
@@ -1290,10 +1290,10 @@ groups_process_to_count
 	assert (encounters && players && pn);
 	assert (encounters->n > 0);
 
-	if (supporting_groupmem_init (gv, players->n, encounters->n)) {
+	if (groupvar_init (gv, players->n, encounters->n)) {
 		n = convert_to_groups(NULL, gv, players->n, players->name, players, encounters);
 		ok = TRUE;
-		supporting_groupmem_done (gv);
+		groupvar_done (gv);
 	} else {
 		ok = FALSE;
 	}
@@ -1316,10 +1316,10 @@ groups_are_ok
 	assert (encounters && players);
 	assert (encounters->n > 0);
 
-	if (supporting_groupmem_init (gv, players->n, encounters->n)) {
+	if (groupvar_init (gv, players->n, encounters->n)) {
 		n = convert_to_groups(NULL, gv, players->n, players->name, players, encounters);
 		ok = (1 == n) || 1 == non_empty_groups_population(gv, players); // single ones have been purged;
-		supporting_groupmem_done (gv);
+		groupvar_done (gv);
 	} else {
 		ok = FALSE;
 	}
