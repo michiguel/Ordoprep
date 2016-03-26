@@ -614,27 +614,21 @@ convert_to_groups (FILE *f, group_var_t *gv, player_t n_plyrs, const char **name
 {
 	player_t i;
 	gamesnum_t e;
+	super_t SP;
+	super_t *sp = &SP;
 
-super_t SP__;
-super_t *sp = &SP__;
-
-if (supporting_encmem_init (encounters->n, sp)) {
-
-	scan_encounters(encounters->enc, encounters->n, gv->groupbelong, players->n, sp->SE2, &sp->N_se2); 
-
-	convert_general_init (gv, n_plyrs);
-	
-	// Initiate groups from critical "super" encounters
-	for (e = 0 ; e < sp->N_se2; e++) {
-		sup_enc2group (&sp->SE2[e], gv);
+	if (supporting_encmem_init (encounters->n, sp)) {
+		scan_encounters(encounters->enc, encounters->n, gv->groupbelong, players->n, sp->SE2, &sp->N_se2); 
+		convert_general_init (gv, n_plyrs);
+		// Initiate groups from critical "super" encounters
+		for (e = 0 ; e < sp->N_se2; e++) {
+			sup_enc2group (&sp->SE2[e], gv);
+		}
+		supporting_encmem_done (sp);
+	} else {
+		fprintf (stderr, "No memory available\n");
+		exit(EXIT_FAILURE);
 	}
-
-	supporting_encmem_done (sp);
-
-} else {
-	fprintf (stderr, "No memory available\n");
-	exit(EXIT_FAILURE);
-}
 
 	// Initiate groups for each player present in the database that did not have 
 	// critical super encounters
@@ -1260,29 +1254,23 @@ groups_process
 		assert (pN_intra && pN_inter);
 		assert (encounters->n > 0);
 
-			if (supporting_groupmem_init (gv, players->n, encounters->n)) {
-
-				n = convert_to_groups(groupf, gv, players->n, players->name, players, encounters);
-				sieve_encounters (gv, encounters->enc, encounters->n, pN_intra, pN_inter);
-
-				if (groupid_out) {
-					player_t i;
-					for (i = 0; i < players->n; i++) {
-						groupid_out[i] = gv->getnewid[group_belonging(gv,i)];
-					}
-				}	
-
-				ok = TRUE;
-				supporting_groupmem_done (gv);
-			} else {
-				ok = FALSE;
-			}
-
+		if (supporting_groupmem_init (gv, players->n, encounters->n)) {
+			n = convert_to_groups(groupf, gv, players->n, players->name, players, encounters);
+			sieve_encounters (gv, encounters->enc, encounters->n, pN_intra, pN_inter);
+			if (groupid_out) {
+				player_t i;
+				for (i = 0; i < players->n; i++) {
+					groupid_out[i] = gv->getnewid[group_belonging(gv,i)];
+				}
+			}	
+			ok = TRUE;
+			supporting_groupmem_done (gv);
+		} else {
+			ok = FALSE;
+		}
 		*pn = n;
-
 		memrel(gv);
 	}
-
 	return ok;
 }
 
@@ -1296,22 +1284,19 @@ groups_process_to_count
 {
 	player_t n = 0;
 	bool_t ok = FALSE;
-
-group_var_t GV;
-group_var_t *gv = &GV;
+	group_var_t GV;
+	group_var_t *gv = &GV;
 
 	assert (encounters && players && pn);
 	assert (encounters->n > 0);
 
-		if (supporting_groupmem_init (gv, players->n, encounters->n)) {
-
-			n = convert_to_groups(NULL, gv, players->n, players->name, players, encounters);
-			ok = TRUE;
-			supporting_groupmem_done (gv);
-		} else {
-			ok = FALSE;
-		}
-
+	if (supporting_groupmem_init (gv, players->n, encounters->n)) {
+		n = convert_to_groups(NULL, gv, players->n, players->name, players, encounters);
+		ok = TRUE;
+		supporting_groupmem_done (gv);
+	} else {
+		ok = FALSE;
+	}
 	*pn = n;
 	return ok;
 }
@@ -1325,22 +1310,18 @@ groups_are_ok
 {
 	player_t n = 0;
 	bool_t ok = FALSE;
-
-group_var_t GV;
-group_var_t *gv = &GV;
+	group_var_t GV;
+	group_var_t *gv = &GV;
 
 	assert (encounters && players);
 	assert (encounters->n > 0);
 
-		if (supporting_groupmem_init (gv, players->n, encounters->n)) {
-
-			n = convert_to_groups(NULL, gv, players->n, players->name, players, encounters);
-
-			ok = (1 == n) || 1 == non_empty_groups_population(gv, players); // single ones have been purged;
-			supporting_groupmem_done (gv);
-		} else {
-			ok = FALSE;
-		}
-
+	if (supporting_groupmem_init (gv, players->n, encounters->n)) {
+		n = convert_to_groups(NULL, gv, players->n, players->name, players, encounters);
+		ok = (1 == n) || 1 == non_empty_groups_population(gv, players); // single ones have been purged;
+		supporting_groupmem_done (gv);
+	} else {
+		ok = FALSE;
+	}
 	return ok;
 }
