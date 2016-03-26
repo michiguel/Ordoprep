@@ -48,36 +48,14 @@ static void		connection_buffer_done (struct CONNECT_BUFFER *x);
 
 // supporting memory
 
-	// enc
-
 	// SE2: list of "Super" encounters that do not belong to the same group
-
-//static struct ENC *	SE2  = NULL;
-//static gamesnum_t	N_se2 = 0;
-
-	// groups
-
-#if 0
-static player_t		GV.nplayers = 0;
-
-static player_t	*	Group_belong;
-
-static player_t *	Get_new_id;
-
-static group_t 	**	Group_final_list;
-static player_t		Group_final_list_n = 0;
-
-static node_t	*	Node;
-
-static player_t	*	CHAIN;
-#endif
-
-//------
 
 struct SUPER {
 	struct ENC *	SE2;
 	gamesnum_t		N_se2;
 };
+
+	// groups
 
 typedef struct SUPER super_t;
 
@@ -120,8 +98,8 @@ static group_t * 	group_reset (group_t *g);
 static group_t * 	group_combined (group_t *g);
 static group_t * 	group_pointed_by_conn (connection_t *c);
 static group_t *	group_pointed_by_node (node_t *nd);
-static void			final_assign_newid (void);
-static void			final_list_output (FILE *f);
+static void			final_assign_newid (group_var_t *gv);
+static void			final_list_output (FILE *f, group_var_t *gv);
 static void			group_output (FILE *f, group_t *s);
 
 // groupset functions
@@ -646,9 +624,9 @@ convert_general_init (player_t n_plyrs)
 }
 
 static player_t
-groups_counter (void)
+groups_counter (group_var_t *gv)
 {
-	return GV.groupfinallist_n;
+	return gv->groupfinallist_n;
 }
 
 
@@ -687,24 +665,25 @@ convert_to_groups (FILE *f, player_t n_plyrs, const char **name, const struct PL
 	simplify_all();
 	finish_it();
 
-	final_assign_newid ();
+	final_assign_newid (&GV);
 
 	if (NULL != f) {
-		if (groups_counter() > 1) {
+		if (groups_counter(&GV) > 1) {
 			fprintf (f,"Group connectivity: **FAILED**\n");
-			final_list_output(f);
+			final_list_output(f, &GV);
 		} else {
-			assert (1 == groups_counter());
+			assert (1 == groups_counter(&GV));
 			fprintf (f,"Group connectivity: **PASSED**\n");
 			fprintf (f,"All players are connected into only one group.\n");
 
 		}	
 	}
 
-	return groups_counter() ;
+	return groups_counter(&GV) ;
 }
 
 
+// no globals
 static void
 sieve_encounters	( const struct ENC *enc
 					, gamesnum_t n_enc
@@ -1069,34 +1048,36 @@ finish_it (void)
 	return;
 }
 
+// no globals
 static void
-final_assign_newid (void)
+final_assign_newid (group_var_t *gv)
 {
 	group_t *g;
 	player_t i;
 	long new_id;
 
-	for (i = 0; i < GV.nplayers; i++) {
-		GV.getnewid[i] = NO_ID;
+	for (i = 0; i < gv->nplayers; i++) {
+		gv->getnewid[i] = NO_ID;
 	}
 
 	new_id = 0;
-	for (i = 0; i < GV.groupfinallist_n; i++) {
-		g = GV.groupfinallist[i];
+	for (i = 0; i < gv->groupfinallist_n; i++) {
+		g = gv->groupfinallist[i];
 		new_id++;
-		GV.getnewid[g->id] = new_id;
+		gv->getnewid[g->id] = new_id;
 	}
 }
 
+// no globals
 static void
-final_list_output (FILE *f)
+final_list_output (FILE *f, group_var_t *gv)
 {
 	group_t *g;
 	player_t i;
 
-	for (i = 0; i < GV.groupfinallist_n; i++) {
-		g = GV.groupfinallist[i];
-		fprintf (f,"\nGroup %ld\n",(long)GV.getnewid[g->id]);
+	for (i = 0; i < gv->groupfinallist_n; i++) {
+		g = gv->groupfinallist[i];
+		fprintf (f,"\nGroup %ld\n",(long)gv->getnewid[g->id]);
 		simplify_shrink_redundancy (g);
 		group_output(f,g);
 	}
@@ -1264,7 +1245,7 @@ groups_process
 			sieve_encounters (encounters->enc, encounters->n, pN_intra, pN_inter);
 
 			if (groupid_out) {
-				int long i;
+				player_t i;
 				for (i = 0; i < players->n; i++) {
 					groupid_out[i] = GV.getnewid[group_belonging(i)];
 				}
