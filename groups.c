@@ -76,18 +76,18 @@ static group_var_t GV;
 
 static void				simplify_all (group_var_t *gv);
 static void				finish_it (group_var_t *gv);
-static void 			connect_init (void) {GV.connectionbuffer.n = 0;}
-static connection_t *	connection_new (void) 
+static void 			connect_init (group_var_t *gv) {gv->connectionbuffer.n = 0;}
+static connection_t *	connection_new (group_var_t *gv) 
 {
-	assert (GV.connectionbuffer.n < GV.connectionbuffer.max);
-	return &GV.connectionbuffer.list[GV.connectionbuffer.n++];
+	assert (gv->connectionbuffer.n < gv->connectionbuffer.max);
+	return &gv->connectionbuffer.list[gv->connectionbuffer.n++];
 }
 
-static void 			participant_init (void) {GV.participantbuffer.n = 0;}
-static participant_t *	participant_new (void) 
+static void 			participant_init (group_var_t *gv) {gv->participantbuffer.n = 0;}
+static participant_t *	participant_new (group_var_t *gv) 
 {
-	assert (GV.participantbuffer.n < GV.participantbuffer.max);	
-	return &GV.participantbuffer.list[GV.participantbuffer.n++];
+	assert (gv->participantbuffer.n < gv->participantbuffer.max);	
+	return &gv->participantbuffer.list[gv->participantbuffer.n++];
 }
 
 // prototypes
@@ -391,7 +391,7 @@ static void
 add_participant (group_t *g, player_t i, const char *name)
 {
 	participant_t *nw;
-	nw = participant_new();
+	nw = participant_new(&GV);
 	nw->next = NULL;
 	nw->name = name;
 	nw->id = i; 
@@ -419,7 +419,7 @@ add_beat_connection (group_t *g, struct NODE *pnode)
 	group_id = pnode->group->id;
 
 	if (g->cstart == NULL) {
-		nw = connection_new();
+		nw = connection_new(&GV);
 		nw->next = NULL;
 		nw->node = pnode;
 		g->cstart = nw; 
@@ -432,7 +432,7 @@ add_beat_connection (group_t *g, struct NODE *pnode)
 			found = nd && nd->group && nd->group->id == group_id;
 		}
 		if (!found) {
-			nw = connection_new();
+			nw = connection_new(&GV);
 			nw->next = NULL;
 			nw->node = pnode;
 			l = g->clast;
@@ -456,7 +456,7 @@ add_lost_connection (group_t *g, struct NODE *pnode)
 	group_id = pnode->group->id;
 
 	if (g->lstart == NULL) {
-		nw = connection_new();
+		nw = connection_new(&GV);
 		nw->next = NULL;
 		nw->node = pnode;
 		g->lstart = nw; 
@@ -469,7 +469,7 @@ add_lost_connection (group_t *g, struct NODE *pnode)
 			found = nd && nd->group && nd->group->id == group_id;
 		}
 		if (!found) {
-			nw = connection_new();
+			nw = connection_new(&GV);
 			nw->next = NULL;
 			nw->node = pnode;
 			l = g->llast;
@@ -612,8 +612,8 @@ static void
 convert_general_init (player_t n_plyrs)
 {
 	player_t i;
-	connect_init();
-	participant_init();
+	connect_init(&GV);
+	participant_init(&GV);
 	groupset_init(&GV);
 	for (i = 0; i < n_plyrs; i++) {
 		GV.node[i].group = NULL;
