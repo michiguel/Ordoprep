@@ -104,10 +104,10 @@ static void			group_output (FILE *f, group_t *s);
 
 #ifndef NDEBUG
 static bool_t
-groupset_sanity_check(void)
+groupset_sanity_check(group_var_t *gv)
 { 
 	// verify g is properly double-linked
-	group_t *g = GV.groupbuffer.prehead;
+	group_t *g = gv->groupbuffer.prehead;
 	if (g == NULL) return FALSE;
 	for (g = g->next; g != NULL; g = g->next) {
 		if (g->prev == NULL) return FALSE;
@@ -116,10 +116,10 @@ groupset_sanity_check(void)
 }
 
 static bool_t
-groupset_sanity_check_nocombines(void)
+groupset_sanity_check_nocombines(group_var_t *gv)
 { 
 	// verify g is properly double-linked
-	group_t *g = GV.groupbuffer.prehead;
+	group_t *g = gv->groupbuffer.prehead;
 	if (g == NULL) return FALSE;
 	for (g = g->next; g != NULL; g = g->next) {
 		if (g->combined != NULL) return FALSE;
@@ -129,25 +129,25 @@ groupset_sanity_check_nocombines(void)
 #endif
 
 static void 
-groupset_init (void) 
+groupset_init (group_var_t *gv) 
 {
-	GV.groupbuffer.tail    = &GV.groupbuffer.list[0];
-	GV.groupbuffer.prehead = &GV.groupbuffer.list[0];
-	group_reset(GV.groupbuffer.prehead);
-	GV.groupbuffer.n = 1;
+	gv->groupbuffer.tail    = &gv->groupbuffer.list[0];
+	gv->groupbuffer.prehead = &gv->groupbuffer.list[0];
+	group_reset(gv->groupbuffer.prehead);
+	gv->groupbuffer.n = 1;
 }
 
-static group_t * groupset_tail (void) {return GV.groupbuffer.tail;}
-static group_t * groupset_head (void) {return GV.groupbuffer.prehead->next;}
+static group_t * groupset_tail (group_var_t *gv) {return gv->groupbuffer.tail;}
+static group_t * groupset_head (group_var_t *gv) {return gv->groupbuffer.prehead->next;}
 
 #if 0
 // for debuggin purposes
-static void groupset_print(void)
+static void groupset_print(group_var_t *gv)
 {
 	group_t * s;
 	printf("ID added {\n");
-	for (s = groupset_head(); s != NULL; s = s->next) {
-		printf("  id=%d\n",s->id);
+	for (s = groupset_head(gv); s != NULL; s = s->next) {
+		printf("  id=%ld\n", (long)s->id);
 	}
 	printf("}\n");
 	return;
@@ -155,19 +155,19 @@ static void groupset_print(void)
 #endif
 
 static void 
-groupset_add (group_t *a) 
+groupset_add (group_var_t *gv, group_t *a) 
 {
-	group_t *t = groupset_tail();
+	group_t *t = groupset_tail(gv);
 	t->next = a;
 	a->prev = t;
-	GV.groupbuffer.tail = a;
+	gv->groupbuffer.tail = a;
 }
 
 static group_t * 
-groupset_find (player_t id)
+groupset_find (group_var_t *gv, player_t id)
 {
 	group_t * s;
-	for (s = groupset_head(); s != NULL; s = s->next) {
+	for (s = groupset_head(gv); s != NULL; s = s->next) {
 		if (id == s->id) return s;
 	}
 	return NULL;
@@ -547,10 +547,10 @@ node_add_group (player_t x)
 {
 	group_t *g;
 	assert (!node_is_occupied(x)); 
-	if (NULL == (g = groupset_find (GV.groupbelong[x]))) {
+	if (NULL == (g = groupset_find (&GV, GV.groupbelong[x]))) {
 		g = group_reset(group_new());	
 		g->id = GV.groupbelong[x];
-		groupset_add(g);
+		groupset_add(&GV,g);
 	}
 	assert (g->id == GV.groupbelong[x]);
 	GV.node[x].group = g;
@@ -614,7 +614,7 @@ convert_general_init (player_t n_plyrs)
 	player_t i;
 	connect_init();
 	participant_init();
-	groupset_init();
+	groupset_init(&GV);
 	for (i = 0; i < n_plyrs; i++) {
 		GV.node[i].group = NULL;
 	}
@@ -653,12 +653,12 @@ convert_to_groups (FILE *f, player_t n_plyrs, const char **name, const struct PL
 	// for all the previous added groups, add respective list of participants
 	for (i = 0; i < n_plyrs; i++) {
 		if (node_is_occupied(i)) {
-			group_t *g = groupset_find(GV.groupbelong[i]);
+			group_t *g = groupset_find(&GV, GV.groupbelong[i]);
 			if (g) add_participant(g, i, name[i]);	
 		}
 	}
 
-	assert(groupset_sanity_check_nocombines());
+	assert(groupset_sanity_check_nocombines(&GV));
 
 	simplify_all();
 	finish_it();
@@ -762,7 +762,7 @@ simplify_all (void)
 {
 	group_t *g;
 
-	g = groupset_head();
+	g = groupset_head(&GV);
 	assert(g);
 
 	while(g) {
@@ -935,7 +935,7 @@ simplify (group_t *g)
 	group_t	*combine_with = NULL;
 	do {
 		simplify_shrink_redundancy (g);
-		assert(groupset_sanity_check());
+		assert(groupset_sanity_check(&GV));
 		if (NULL != (combine_with = find_combine_candidate (g))) {
 			//printf("combine g=%d combine_with=%d\n",g->id, combine_with->id);
 			group_gocombine (g, combine_with);
@@ -1001,7 +1001,7 @@ finish_it (void)
 
 		chain = GV.gchain;
 
-		g = groupset_head();
+		g = groupset_head(&GV);
 		if (g == NULL) break;
 		own_id = g->id; // own id
 
