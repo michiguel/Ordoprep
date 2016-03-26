@@ -614,12 +614,10 @@ groups_counter (group_var_t *gv)
 
 
 player_t
-convert_to_groups (FILE *f, player_t n_plyrs, const char **name, const struct PLAYERS *players, const struct ENCOUNTERS *encounters)
+convert_to_groups (FILE *f, group_var_t *gv, player_t n_plyrs, const char **name, const struct PLAYERS *players, const struct ENCOUNTERS *encounters)
 {
 	player_t i;
 	gamesnum_t e;
-
-group_var_t *gv = &GV; //FIXME
 
 	scan_encounters(encounters->enc, encounters->n, gv->groupbelong, players->n, SP.SE2, &SP.N_se2); 
 
@@ -1250,7 +1248,7 @@ groups_process
 
 		if (supporting_groupmem_init (&GV, players->n, encounters->n)) {
 
-			n = convert_to_groups(groupf, players->n, players->name, players, encounters);
+			n = convert_to_groups(groupf, &GV, players->n, players->name, players, encounters);
 			sieve_encounters (&GV, encounters->enc, encounters->n, pN_intra, pN_inter);
 
 			if (groupid_out) {
@@ -1290,7 +1288,7 @@ groups_process_to_count
 
 		if (supporting_groupmem_init (&GV, players->n, encounters->n)) {
 
-			n = convert_to_groups(NULL, players->n, players->name, players, encounters);
+			n = convert_to_groups(NULL, &GV, players->n, players->name, players, encounters);
 			ok = TRUE;
 			supporting_groupmem_done (&GV);
 		} else {
@@ -1319,7 +1317,7 @@ groups_are_ok
 
 		if (supporting_groupmem_init (&GV, players->n, encounters->n)) {
 
-			n = convert_to_groups(NULL, players->n, players->name, players, encounters);
+			n = convert_to_groups(NULL, &GV, players->n, players->name, players, encounters);
 
 			ok = (1 == n) || 1 == non_empty_groups_population(&GV, players); // single ones have been purged;
 			supporting_groupmem_done (&GV);
