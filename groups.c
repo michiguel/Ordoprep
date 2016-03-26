@@ -81,7 +81,7 @@ static group_t * 	group_pointed_by_conn (connection_t *c);
 static group_t *	group_pointed_by_node (node_t *nd);
 static void			final_assign_newid (group_var_t *gv);
 static void			final_list_output (FILE *f, group_var_t *gv);
-static void			group_output (FILE *f, group_t *s);
+static void			group_output (FILE *f, group_var_t *gv, group_t *s);
 
 // groupset functions
 
@@ -835,7 +835,7 @@ simplify_shrink__ (group_t *g)
 		return;
 	}
 
-	max_player = 1 + find_top_id(g); // used to be max_player = GV.nplayers;
+	max_player = 1 + find_top_id(g); // used to be max_player = gv->nplayers;
 
 	if (!ba_init(&bA, max_player)) {
 		fprintf(stderr, "No memory to initialize internal arrays\n");
@@ -911,10 +911,13 @@ find_combine_candidate (group_t *g)
 	bitarray_t 		bA;
 	connection_t 	*c;
 	player_t		id;
+	player_t		max_player;
 
 	assert(g);
 
-	if (!ba_init(&bA, GV.nplayers)) {
+	max_player = 1 + find_top_id(g); // used to be max_player = gv->nplayers;
+
+	if (!ba_init(&bA, max_player)) {
 		fprintf(stderr, "No memory to initialize internal arrays\n");
 		exit(EXIT_FAILURE);			  
 	}
@@ -1086,7 +1089,7 @@ final_list_output (FILE *f, group_var_t *gv)
 		g = gv->groupfinallist[i];
 		fprintf (f,"\nGroup %ld\n",(long)gv->getnewid[g->id]);
 		simplify_shrink_redundancy (g);
-		group_output(f,g);
+		group_output(f,gv,g);
 	}
 
 	fprintf(f,"\n");
@@ -1187,7 +1190,7 @@ participants_list_print (FILE *f, participant_t *pstart)
 }
 
 static void
-group_output (FILE *f, group_t *s)
+group_output (FILE *f, group_var_t *gv, group_t *s)
 {		
 	connection_t *c;
 	player_t own_id;
@@ -1201,7 +1204,7 @@ group_output (FILE *f, group_t *s)
 		group_t *gr = group_pointed_by_conn(c);
 		if (gr != NULL) {
 			if (gr->id != own_id) {
-				fprintf (f," \\---> there are (only) wins against group: %ld\n",(long)GV.getnewid[gr->id]);
+				fprintf (f," \\---> there are (only) wins against group: %ld\n",(long)gv->getnewid[gr->id]);
 				winconnections++;
 			}
 		} else
@@ -1211,7 +1214,7 @@ group_output (FILE *f, group_t *s)
 		group_t *gr = group_pointed_by_conn(c);
 		if (gr != NULL) {
 			if (gr->id != own_id) {
-				fprintf (f," \\---> there are (only) losses against group: %ld\n",(long)GV.getnewid[gr->id]);
+				fprintf (f," \\---> there are (only) losses against group: %ld\n",(long)gv->getnewid[gr->id]);
 				lossconnections++;
 			}
 		} else
