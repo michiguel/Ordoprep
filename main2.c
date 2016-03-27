@@ -305,6 +305,8 @@ fopen_series (player_t n, const char *base, const char *mode)
 }
 
 
+
+
 #include "encount.h"
 #include "groups.h"
 
@@ -443,7 +445,6 @@ const char *groupstr = groupstr_inp;
 		}
 	}
 
-
 	if (groupstr != NULL) {
 		FILE *groupf = NULL;
 		if (NULL != (groupf = fopen (groupstr, "w"))) {
@@ -488,21 +489,16 @@ const char *groupstr = groupstr_inp;
 	}
 
 	if (group_players_str != NULL) {
-			fprintf (stderr, "group_players_str not implemented yet\n");
-			exit(EXIT_FAILURE);
+		fprintf (stderr, "group_players_str not implemented yet\n");
+		exit(EXIT_FAILURE);
 	}
-
 
 	if (do_groups && NULL != gv) {
 		gv = GV_kill(gv);
 		exit(EXIT_SUCCESS);
 	}
 
-
-
 }
-//-----
-
 
 	/*==== CALCULATIONS ====*/
 
