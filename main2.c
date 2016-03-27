@@ -296,16 +296,22 @@ save2pgnf_by_group(struct GAMES *gm, struct PLAYERS *pl, FILE *f, player_t *grou
 	return;
 }
 
-static FILE *
-fopen_series (player_t n, const char *base, const char *mode)
+#include <string.h>
+
+static char *
+str_series(player_t n, const char *base)
 {
-	char s[1024];
-	sprintf (s,"%s.%ld.pgn", base, n);
-	return fopen(s,mode);
+	const char *dot = ".";
+	const char *sfx = "pgn";
+	size_t width = 9;
+	size_t sz;
+	char *p;
+
+	sz = strlen(base) + strlen(dot) + width + strlen(dot) + strlen(sfx) + 1;
+	p = memnew (sz);
+	sprintf (p,"%s%s%0*d%s%s", base, dot, (int)width, (int)n, dot, sfx);
+	return p;
 }
-
-
-
 
 #include "encount.h"
 #include "groups.h"
@@ -473,10 +479,21 @@ const char *groupstr = groupstr_inp;
 			GV_groupid (gv, groupid);
 
 			for (g = 0; g < groups_n; g++) {
-				if (NULL != (f = fopen_series(g+1, group_games_str, "w"))) {
-					printf ("saving... group=%ld\n",g+1);	
-					save2pgnf_by_group (&Games, &Players, f, groupid, g+1);
-					fclose(f);
+				bool_t ok = FALSE;
+				char *fname = str_series(g+1,group_games_str);
+				if (fname) {
+					if (NULL != (f = fopen(fname, "w"))) {
+						printf ("saving... group=%ld ---> %s\n",g+1,fname);	
+						save2pgnf_by_group (&Games, &Players, f, groupid, g+1);
+						ok = TRUE;
+						fclose(f);
+					}
+					memrel(fname);
+				} 
+
+				if (!ok) {
+					fprintf(stderr, "Problems opening file for output\n");
+					exit(EXIT_FAILURE);
 				}
 			}
 
