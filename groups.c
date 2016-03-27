@@ -1357,7 +1357,7 @@ GV_make
 	if (NULL != (gv = memnew(sizeof(group_var_t)))) {
 		if (groupvar_init (gv, players->n, encounters->n)) {
 			n = groupvar_build(gv, players->n, players->name, players, encounters);
-			ok = TRUE;
+			ok = n > 0 && TRUE;
 		} else {
 			memrel(gv);
 			ok = FALSE;
@@ -1370,8 +1370,29 @@ void
 GV_kill (group_var_t *gv)
 {
 	assert(gv);
-
 	groupvar_done(gv);
 	memrel(gv);
+}
+
+void
+GV_out (group_var_t *gv, FILE *f)
+{
+	assert(f);
+	if (f)	groupvar_output_info (gv, f);
+}
+
+void
+GV_sieve (group_var_t *gv, const struct ENCOUNTERS *encounters, gamesnum_t * pN_intra, gamesnum_t * pN_inter)
+{
+	assert(gv && encounters && pN_intra && pN_inter);
+	groupvar_sieveenc (gv, encounters->enc, encounters->n, pN_intra, pN_inter);
+}
+
+
+player_t
+GV_counter (group_var_t *gv)
+{
+	assert(gv);
+	return groupvar_counter(gv);
 }
 

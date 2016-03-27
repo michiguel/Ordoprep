@@ -429,7 +429,7 @@ group_players_str
 
 */
 	if (
-//		0 &&
+		0 &&
 		groupstr != NULL) {
 
 		player_t *groupid = NULL;
@@ -476,7 +476,64 @@ group_players_str
 	}
 
 //-----
+{
+group_var_t *gv = NULL;
 
+	if (groupstr != NULL) {
+
+		struct ENCOUNTERS Encounters;
+		FILE *groupf = NULL;
+
+		groupf = fopen (groupstr, "w");
+		if (groupf == NULL) {
+			fprintf(stderr, "Errors with file: %s\n",groupstr);			
+			exit(EXIT_FAILURE);
+		} else {
+			bool_t ok;
+			player_t groups_n;
+			gamesnum_t intra;
+			gamesnum_t inter;
+
+			if (encounters_init (Games.n, &Encounters)) {
+
+				encounters_calculate (ENCOUNTERS_FULL, &Games, Players.flagged, &Encounters);
+
+				if (NULL != (gv = GV_make (&Encounters, &Players))) {
+					GV_out (gv, groupf);
+					GV_sieve (gv, &Encounters, &intra, &inter);
+					groups_n = GV_counter(gv);
+					GV_kill(gv);
+					
+					ok = TRUE;
+				} else {
+					ok = FALSE;
+				}
+
+				encounters_done (&Encounters);
+
+				if (!ok) {
+					fprintf (stderr, "not enough memory for encounters allocation\n");
+					exit(EXIT_FAILURE);
+				}
+
+				if (!quietmode) {
+					printf ("Groups=%ld\n", (long)groups_n);
+					printf ("Encounters: Total=%ld, within groups=%ld, @ interface between groups=%ld\n"
+								,(long)Encounters.n, (long)intra, (long)inter);
+				}
+
+				exit(EXIT_SUCCESS);
+
+		 	} else {
+				fprintf (stderr, "Could not initialize Encounters memory\n"); exit(EXIT_FAILURE);
+			}
+
+			fclose(groupf);
+		}
+	}
+
+
+}
 //-----
 
 	if (group_games_str != NULL) {
