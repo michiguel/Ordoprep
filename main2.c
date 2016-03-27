@@ -431,12 +431,12 @@ group_players_str
 
 //-----
 {
-bool_t do_groups = groupstr != NULL;
-group_var_t *gv = NULL;
+	bool_t do_groups = groupstr != NULL || group_games_str != NULL;
+	group_var_t *gv = NULL;
 
-struct ENCOUNTERS Encounters;
-gamesnum_t intra;
-gamesnum_t inter;
+	struct ENCOUNTERS Encounters;
+	gamesnum_t intra;
+	gamesnum_t inter;
 
 	if (do_groups) {
 
@@ -463,7 +463,6 @@ gamesnum_t inter;
 			player_t groups_n;
 			GV_out (gv, groupf);
 			groups_n = GV_counter(gv);
-			GV_kill(gv);
 					
 			if (!quietmode) {
 				printf ("Groups=%ld\n", (long)groups_n);
@@ -472,74 +471,51 @@ gamesnum_t inter;
 			}
 			fclose(groupf);
 		}
+
+	}
+
+	if (group_games_str != NULL) {
+		player_t *groupid;
+
+		if (NULL != (groupid = memnew(sizeof(player_t) * (size_t)Players.n))) {
+			FILE *f;
+			player_t groups_n = GV_counter(gv);
+			int g;
+
+			GV_groupid (gv, groupid);
+
+			for (g = 0; g < groups_n; g++) {
+				if (NULL != (f = fopen_series(g+1,group_games_str,"w"))) {
+					printf ("saving... group=%d\n",g+1);	
+					save2pgnf_by_group (&Games, &Players, f, groupid, g+1);
+					fclose(f);
+				}
+			}
+
+			memrel(groupid);
+
+		} else {
+			fprintf (stderr, "not enough memory for encounters allocation\n");
+			exit(EXIT_FAILURE);
+		}
+	}
+
+	if (group_players_str != NULL) {
+			fprintf (stderr, "group_players_str not implemented yet\n");
+			exit(EXIT_FAILURE);
+	}
+
+
+	if (do_groups && NULL != gv) {
+		gv = GV_kill(gv);
 		exit(EXIT_SUCCESS);
 	}
 
 
 
-	if (do_groups && NULL != gv) {
-		GV_kill(gv);
-	}
-
 }
 //-----
 
-	if (group_games_str != NULL) {
-
-		player_t *groupid;
-		struct ENCOUNTERS Encounters;
-		FILE *groupf = NULL;
-
-		{
-			bool_t ok;
-			player_t groups_n;
-			gamesnum_t intra;
-			gamesnum_t inter;
-
-			if (encounters_init (Games.n, &Encounters)) {
-
-				groupid = memnew(sizeof(player_t) * (size_t)Players.n);
-
-				encounters_calculate (ENCOUNTERS_FULL, &Games, Players.flagged, &Encounters);
-
-				ok = groups_process (&Encounters, &Players, groupf, &groups_n, &intra, &inter, groupid);
-
-				encounters_done (&Encounters);
-
-				if (!ok) {
-					fprintf (stderr, "not enough memory for encounters allocation\n");
-					exit(EXIT_FAILURE);
-				}
-
-				if (!quietmode) {
-					printf ("Groups=%ld\n", (long)groups_n);
-					printf ("Encounters: Total=%ld, within groups=%ld, @ interface between groups=%ld\n"
-								,(long)Encounters.n, (long)intra, (long)inter);
-				}
-
-				if (groupid) {
-					FILE *f;
-					int g;
-					for (g = 0; g < groups_n; g++) {
-						if (NULL != (f = fopen_series(g+1,group_games_str,"w"))) {
-							printf ("saving... group=%d\n",g+1);	
-							save2pgnf_by_group (&Games, &Players, f, groupid, g+1);
-							fclose(f);
-						}
-					}
-				}
-
-				memrel(groupid);
-
-				exit(EXIT_SUCCESS);
-
-		 	} else {
-				fprintf (stderr, "Could not initialize Encounters memory\n"); exit(EXIT_FAILURE);
-			}
-
-			fclose(groupf);
-		}
-	}
 
 	/*==== CALCULATIONS ====*/
 

@@ -125,10 +125,11 @@ extern bool_t	groups_are_ok			( const struct ENCOUNTERS *encounters
 										, const struct PLAYERS *players);
 
 extern group_var_t *	GV_make	(const struct ENCOUNTERS *encounters, const struct PLAYERS *players);
-extern void 			GV_kill (group_var_t *gv);
+extern group_var_t *	GV_kill (group_var_t *gv);
 extern void				GV_out (group_var_t *gv, FILE *f);
 extern void				GV_sieve (group_var_t *gv, const struct ENCOUNTERS *encounters, gamesnum_t * pN_intra, gamesnum_t * pN_inter);
 extern player_t			GV_counter (group_var_t *gv);
+extern void				GV_groupid (group_var_t *gv, player_t *groupid_out);
 
 /*<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<*/
 #endif

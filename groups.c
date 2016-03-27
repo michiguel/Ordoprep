@@ -1359,19 +1359,20 @@ GV_make
 			n = groupvar_build(gv, players->n, players->name, players, encounters);
 			ok = n > 0 && TRUE;
 		} else {
-			memrel(gv);
 			ok = FALSE;
 		}
+		if (!ok) memrel(gv);
 	}
 	return ok? gv: NULL;
 }
 
-void
+group_var_t *
 GV_kill (group_var_t *gv)
 {
 	assert(gv);
 	groupvar_done(gv);
 	memrel(gv);
+	return NULL;
 }
 
 void
@@ -1395,4 +1396,12 @@ GV_counter (group_var_t *gv)
 	assert(gv);
 	return groupvar_counter(gv);
 }
+
+void
+GV_groupid (group_var_t *gv, player_t *groupid_out)
+{
+	assert(gv && groupid_out);
+	groupvar_to_groupid(gv, groupid_out);
+}
+
 
