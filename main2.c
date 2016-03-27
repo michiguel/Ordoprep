@@ -297,10 +297,10 @@ save2pgnf_by_group(struct GAMES *gm, struct PLAYERS *pl, FILE *f, player_t *grou
 }
 
 static FILE *
-fopen_series (int n, const char *base, const char *mode)
+fopen_series (player_t n, const char *base, const char *mode)
 {
 	char s[1024];
-	sprintf (s,"%s.%d.pgn", base, n);
+	sprintf (s,"%s.%ld.pgn", base, n);
 	return fopen(s,mode);
 }
 
@@ -421,15 +421,6 @@ const char *groupstr = groupstr_inp;
 
 	//-------------------------------- Groups
 
-/*
-
-groupstr
-group_games_str
-group_players_str
-
-*/
-
-//-----
 {
 	bool_t do_groups = groupstr != NULL || group_games_str != NULL;
 	group_var_t *gv = NULL;
@@ -455,21 +446,17 @@ group_players_str
 
 	if (groupstr != NULL) {
 		FILE *groupf = NULL;
-		groupf = fopen (groupstr, "w");
-		if (groupf == NULL) {
-			fprintf(stderr, "Errors with file: %s\n",groupstr);			
-			exit(EXIT_FAILURE);
-		} else {
-			player_t groups_n;
+		if (NULL != (groupf = fopen (groupstr, "w"))) {
 			GV_out (gv, groupf);
-			groups_n = GV_counter(gv);
-					
 			if (!quietmode) {
-				printf ("Groups=%ld\n", (long)groups_n);
+				printf ("Groups=%ld\n", (long)GV_counter(gv));
 				printf ("Encounters: Total=%ld, within groups=%ld, @ interface between groups=%ld\n"
-								,(long)Encounters.n, (long)intra, (long)inter);
+						, (long)Encounters.n, (long)intra, (long)inter);
 			}
 			fclose(groupf);
+		} else {
+			fprintf(stderr, "Errors with file: %s\n",groupstr);			
+			exit(EXIT_FAILURE);
 		}
 
 	}
@@ -479,14 +466,14 @@ group_players_str
 
 		if (NULL != (groupid = memnew(sizeof(player_t) * (size_t)Players.n))) {
 			FILE *f;
+			player_t g;
 			player_t groups_n = GV_counter(gv);
-			int g;
 
 			GV_groupid (gv, groupid);
 
 			for (g = 0; g < groups_n; g++) {
-				if (NULL != (f = fopen_series(g+1,group_games_str,"w"))) {
-					printf ("saving... group=%d\n",g+1);	
+				if (NULL != (f = fopen_series(g+1, group_games_str, "w"))) {
+					printf ("saving... group=%ld\n",g+1);	
 					save2pgnf_by_group (&Games, &Players, f, groupid, g+1);
 					fclose(f);
 				}
