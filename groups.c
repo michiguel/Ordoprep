@@ -52,8 +52,8 @@ typedef struct SUPER super_t;
 
 //----------------------------------------------------------------------
 
-static void				simplify_all (group_var_t *gv);
-static void				finish_it (group_var_t *gv);
+static void				groupvar_simplify (group_var_t *gv);
+static void				groupvar_finish (group_var_t *gv);
 static void 			connect_init (group_var_t *gv) {gv->connectionbuffer.n = 0;}
 static connection_t *	connection_new (group_var_t *gv) 
 {
@@ -74,9 +74,9 @@ static group_t * 	group_reset (group_t *g);
 static group_t * 	group_combined (group_t *g);
 static group_t * 	group_pointed_by_conn (connection_t *c);
 static group_t *	group_pointed_by_node (node_t *nd);
-static void			final_assign_newid (group_var_t *gv);
-static void			final_list_output (FILE *f, group_var_t *gv);
-static void			group_output (FILE *f, group_var_t *gv, group_t *s);
+static void			groupvar_assign_newid (group_var_t *gv);
+static void			groupvar_list_output (group_var_t *gv, FILE *f);
+static void			group_output (group_t *s, group_var_t *gv, FILE *f);
 
 // groupset functions
 
@@ -603,7 +603,7 @@ convert_general_init (group_var_t *gv, player_t n_plyrs)
 }
 
 static player_t
-groups_counter (group_var_t *gv)
+groupvar_counter (group_var_t *gv)
 {
 	return gv->groupfinallist_n;
 }
@@ -647,25 +647,11 @@ groupvar_build (group_var_t *gv, player_t n_plyrs, const char **name, const stru
 
 	assert(groupset_sanity_check_nocombines(gv));
 
-	simplify_all(gv);
-	finish_it(gv);
-	final_assign_newid (gv);
+	groupvar_simplify(gv);
+	groupvar_finish(gv);
+	groupvar_assign_newid (gv);
 
-#if 0
-	if (NULL != f) {
-		if (groups_counter(gv) > 1) {
-			fprintf (f,"Group connectivity: **FAILED**\n");
-			final_list_output(f, gv);
-		} else {
-			assert (1 == groups_counter(gv));
-			fprintf (f,"Group connectivity: **PASSED**\n");
-			fprintf (f,"All players are connected into only one group.\n");
-
-		}	
-	}
-#endif
-
-	return groups_counter(gv) ;
+	return groupvar_counter(gv) ;
 }
 
 
@@ -746,7 +732,7 @@ static group_t *group_next (group_t *g)
 }
 
 static void
-simplify_all (group_var_t *gv)
+groupvar_simplify (group_var_t *gv)
 {
 	group_t *g;
 
@@ -995,7 +981,7 @@ group_next_pointed_by_beat (group_t *g)
 }
 
 static void
-finish_it (group_var_t *gv)
+groupvar_finish (group_var_t *gv)
 {
 	bitarray_t 	bA;
 	player_t *chain, *chain_end;
@@ -1067,7 +1053,7 @@ finish_it (group_var_t *gv)
 
 // no globals
 static void
-final_assign_newid (group_var_t *gv)
+groupvar_assign_newid (group_var_t *gv)
 {
 	group_t *g;
 	player_t i;
@@ -1087,7 +1073,7 @@ final_assign_newid (group_var_t *gv)
 
 // no globals
 static void
-final_list_output (FILE *f, group_var_t *gv)
+groupvar_list_output (group_var_t *gv, FILE *f)
 {
 	group_t *g;
 	player_t i;
@@ -1096,7 +1082,7 @@ final_list_output (FILE *f, group_var_t *gv)
 		g = gv->groupfinallist[i];
 		fprintf (f,"\nGroup %ld\n",(long)gv->getnewid[g->id]);
 		simplify_shrink_redundancy (g);
-		group_output(f,gv,g);
+		group_output(g,gv,f);
 	}
 
 	fprintf(f,"\n");
@@ -1197,7 +1183,7 @@ participants_list_print (FILE *f, participant_t *pstart)
 }
 
 static void
-group_output (FILE *f, group_var_t *gv, group_t *s)
+group_output (group_t *s, group_var_t *gv, FILE *f)
 {		
 	connection_t *c;
 	player_t own_id;
@@ -1239,11 +1225,11 @@ static void
 groupvar_output_info (group_var_t *gv, FILE *groupf)
 {
 	if (NULL != groupf) {
-		if (groups_counter(gv) > 1) {
+		if (groupvar_counter(gv) > 1) {
 			fprintf (groupf,"Group connectivity: **FAILED**\n");
-			final_list_output(groupf, gv);
+			groupvar_list_output(gv, groupf);
 		} else {
-			assert (1 == groups_counter(gv));
+			assert (1 == groupvar_counter(gv));
 			fprintf (groupf,"Group connectivity: **PASSED**\n");
 			fprintf (groupf,"All players are connected into only one group.\n");
 		}	
@@ -1351,3 +1337,41 @@ groups_are_ok
 	}
 	return ok;
 }
+
+//----------------------------------------------------------
+
+
+group_var_t *
+GV_make
+		( const struct ENCOUNTERS *encounters
+		, const struct PLAYERS *players
+		)
+{
+	player_t n = 0;
+	bool_t ok = FALSE;
+	group_var_t *gv;
+
+	assert (encounters && players);
+	assert (encounters->n > 0);
+
+	if (NULL != (gv = memnew(sizeof(group_var_t)))) {
+		if (groupvar_init (gv, players->n, encounters->n)) {
+			n = groupvar_build(gv, players->n, players->name, players, encounters);
+			ok = TRUE;
+		} else {
+			memrel(gv);
+			ok = FALSE;
+		}
+	}
+	return ok? gv: NULL;
+}
+
+void
+GV_kill (group_var_t *gv)
+{
+	assert(gv);
+
+	groupvar_done(gv);
+	memrel(gv);
+}
+

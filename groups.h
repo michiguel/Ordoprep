@@ -124,5 +124,16 @@ extern bool_t	groups_process_to_count ( const struct ENCOUNTERS *encounters
 extern bool_t	groups_are_ok			( const struct ENCOUNTERS *encounters
 										, const struct PLAYERS *players);
 
+//
+
+extern group_var_t *
+GV_make
+		( const struct ENCOUNTERS *encounters
+		, const struct PLAYERS *players
+		);
+
+extern void
+GV_kill (group_var_t *gv);
+
 /*<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<*/
 #endif

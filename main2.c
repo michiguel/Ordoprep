@@ -428,7 +428,9 @@ group_games_str
 group_players_str
 
 */
-	if (groupstr != NULL) {
+	if (
+//		0 &&
+		groupstr != NULL) {
 
 		player_t *groupid = NULL;
 		struct ENCOUNTERS Encounters;
@@ -472,6 +474,8 @@ group_players_str
 			fclose(groupf);
 		}
 	}
+
+//-----
 
 //-----
 
