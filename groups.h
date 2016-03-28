@@ -83,12 +83,20 @@ struct CONNECT_BUFFER {
 	gamesnum_t		max;
 };
 
+struct GROUPCELL {
+	group_t * 	group;
+	player_t 	count;
+};
+
+typedef struct GROUPCELL groupcell_t;
 
 struct GROUPVAR {
 	player_t		nplayers;
 	player_t	*	groupbelong;
 	player_t *		getnewid;
-	group_t **		groupfinallist;
+//	group_t **		groupfinallist;
+
+	groupcell_t	*	groupfinallist;
 	player_t		groupfinallist_n;
 	node_t	*		node;
 	player_t *		gchain;

@@ -177,13 +177,13 @@ groupvar_init (group_var_t *gv, player_t nplayers, gamesnum_t nenc)
 {
 	player_t 	*a;
 	player_t	*b;
-	group_t *	*c;
+	groupcell_t *c;
 	node_t 		*d;
 	player_t	*e;
 
 	size_t		sa = sizeof(player_t);
 	size_t		sb = sizeof(player_t);
-	size_t		sc = sizeof(group_t *);
+	size_t		sc = sizeof(groupcell_t *);
 	size_t		sd = sizeof(node_t);
 	size_t		se = sizeof(player_t);
 
@@ -980,9 +980,9 @@ group_next_pointed_by_beat (group_t *g)
 	return c == NULL? NULL: gp;
 }
 
-static size_t participants_list_population (participant_t *pstart);
+static player_t participants_list_population (participant_t *pstart);
 
-static size_t
+static player_t
 group_population (group_t *s)
 {
 	assert(s);
@@ -993,6 +993,8 @@ group_population (group_t *s)
 static void
 groupvar_finish (group_var_t *gv)
 {
+	player_t i;
+
 	bitarray_t 	bA;
 	player_t *chain, *chain_end;
 	group_t *g, *gp, *prev_g, *x;
@@ -1046,7 +1048,7 @@ groupvar_finish (group_var_t *gv)
 				}
 
 			} else {
-				gv->groupfinallist[gv->groupfinallist_n++] = group_unlink(prev_g);
+				gv->groupfinallist[gv->groupfinallist_n++].group = group_unlink(prev_g);
 				startover = TRUE;
 			}
 
@@ -1058,19 +1060,11 @@ groupvar_finish (group_var_t *gv)
 
 	ba_done(&bA);	
 
-#if 0
-// TEST POPULATION
-{
-int i;
-group_t *g;
-
+	// build groupcell_t
 	for (i = 0; i < gv->groupfinallist_n; i++) {
-		g = gv->groupfinallist[i];
-		printf ("count(%d)=%ld\n",i,group_population(g));
+		player_t pop = group_population(gv->groupfinallist[i].group);
+		gv->groupfinallist[i].count = pop;
 	}
-}
-#endif
-
 
 	return;
 }
@@ -1089,7 +1083,7 @@ groupvar_assign_newid (group_var_t *gv)
 
 	new_id = 0;
 	for (i = 0; i < gv->groupfinallist_n; i++) {
-		g = gv->groupfinallist[i];
+		g = gv->groupfinallist[i].group;
 		new_id++;
 		gv->getnewid[g->id] = new_id;
 	}
@@ -1103,7 +1097,7 @@ groupvar_list_output (group_var_t *gv, FILE *f)
 	player_t i;
 
 	for (i = 0; i < gv->groupfinallist_n; i++) {
-		g = gv->groupfinallist[i];
+		g = gv->groupfinallist[i].group;
 		fprintf (f,"\nGroup %ld\n",(long)gv->getnewid[g->id]);
 		simplify_shrink_redundancy (g);
 		group_output(g,gv,f);
@@ -1119,10 +1113,10 @@ static int compare_str (const void * a, const void * b)
 	return strcmp(*ap,*bp);
 }
 
-static size_t
+static player_t
 participants_list_population (participant_t *pstart)
 {
-	size_t group_n;
+	player_t group_n;
 	participant_t *p;
 
 	for (p = pstart, group_n = 0; p != NULL; p = p->next) {
@@ -1161,7 +1155,7 @@ non_empty_groups_population (group_var_t *gv, const struct PLAYERS *players)
 	player_t counter = 0;
 
 	for (i = 0; i < gv->groupfinallist_n; i++) {
-		g = gv->groupfinallist[i];
+		g = gv->groupfinallist[i].group;
 		simplify_shrink_redundancy (g);
 		x = group_number_of_actives (g,players);
 		#if 0	
@@ -1183,7 +1177,7 @@ participants_list_print (FILE *f, participant_t *pstart)
 	const char **arr;
 	participant_t *p;
 
-	group_n = participants_list_population (pstart); // how many?
+	group_n = (size_t) participants_list_population (pstart); // how many?
 
 	if (NULL != (arr = memnew (sizeof(char *) * group_n))) {
 		
