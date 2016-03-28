@@ -479,11 +479,16 @@ const char *groupstr = groupstr_inp;
 			GV_groupid (gv, groupid);
 
 			for (g = 0; g < groups_n; g++) {
+				char *fname;
 				bool_t ok = FALSE;
-				char *fname = str_series(g+1,group_games_str);
+
+				if (gv->groupfinallist[g].count < 2)
+					continue;
+
+				fname = str_series(g+1,group_games_str);
 				if (fname) {
 					if (NULL != (f = fopen(fname, "w"))) {
-						printf ("saving... group=%ld ---> %s\n",g+1,fname);	
+						if (!quietmode) printf ("saving... group=%ld ---> %s\n",g+1,fname);	
 						save2pgnf_by_group (&Games, &Players, f, groupid, g+1);
 						ok = TRUE;
 						fclose(f);
