@@ -990,6 +990,13 @@ group_population (group_t *s)
 }
 
 
+static int compare_cell (const void * a, const void * b)
+{
+	const groupcell_t *ap = a;
+	const groupcell_t *bp = b;
+	return ap->count < bp->count? 1: (ap->count > bp->count? -1:0);
+}
+
 static void
 groupvar_finish (group_var_t *gv)
 {
@@ -1065,6 +1072,8 @@ groupvar_finish (group_var_t *gv)
 		player_t pop = group_population(gv->groupfinallist[i].group);
 		gv->groupfinallist[i].count = pop;
 	}
+
+	qsort (gv->groupfinallist, (size_t)gv->groupfinallist_n, sizeof(groupcell_t), compare_cell);
 
 	return;
 }
