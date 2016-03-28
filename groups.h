@@ -83,6 +83,7 @@ struct CONNECT_BUFFER {
 	gamesnum_t		max;
 };
 
+
 struct GROUPVAR {
 	player_t		nplayers;
 	player_t	*	groupbelong;

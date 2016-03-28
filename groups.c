@@ -980,6 +980,16 @@ group_next_pointed_by_beat (group_t *g)
 	return c == NULL? NULL: gp;
 }
 
+static size_t participants_list_population (participant_t *pstart);
+
+static size_t
+group_population (group_t *s)
+{
+	assert(s);
+	return participants_list_population(s->pstart);
+}
+
+
 static void
 groupvar_finish (group_var_t *gv)
 {
@@ -1047,6 +1057,20 @@ groupvar_finish (group_var_t *gv)
 	} while (startover || combined);
 
 	ba_done(&bA);	
+
+#if 0
+// TEST POPULATION
+{
+int i;
+group_t *g;
+
+	for (i = 0; i < gv->groupfinallist_n; i++) {
+		g = gv->groupfinallist[i];
+		printf ("count(%d)=%ld\n",i,group_population(g));
+	}
+}
+#endif
+
 
 	return;
 }
@@ -1181,6 +1205,7 @@ participants_list_print (FILE *f, participant_t *pstart)
 		}
 	}
 }
+
 
 static void
 group_output (group_t *s, group_var_t *gv, FILE *f)
