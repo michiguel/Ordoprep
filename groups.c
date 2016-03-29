@@ -69,12 +69,14 @@ static participant_t *	participant_new (group_var_t *gv)
 }
 
 // prototypes
+
 static group_t * 	group_new (group_var_t *gv);
 static group_t * 	group_reset (group_t *g);
 static group_t * 	group_combined (group_t *g);
 static group_t * 	group_pointed_by_conn (connection_t *c);
 static group_t *	group_pointed_by_node (node_t *nd);
 static void			groupvar_assign_newid (group_var_t *gv);
+static void			groupvar_list_sort (group_var_t *gv);
 static void			groupvar_list_output (group_var_t *gv, FILE *f);
 static void			group_output (group_t *s, group_var_t *gv, FILE *f);
 
@@ -651,6 +653,8 @@ groupvar_build (group_var_t *gv, player_t n_plyrs, const char **name, const stru
 	groupvar_finish(gv);
 	groupvar_assign_newid (gv);
 
+	groupvar_list_sort (gv);
+
 	return groupvar_counter(gv) ;
 }
 
@@ -1115,12 +1119,7 @@ groupvar_list_output (group_var_t *gv, FILE *f)
 	fprintf(f,"\n");
 }
 
-static int compare_str (const void * a, const void * b)
-{
-	const char * const *ap = a;
-	const char * const *bp = b;
-	return strcmp(*ap,*bp);
-}
+
 
 static player_t
 participants_list_population (participant_t *pstart)
@@ -1178,6 +1177,86 @@ non_empty_groups_population (group_var_t *gv, const struct PLAYERS *players)
 	return counter;
 }
 
+/*
+static int compare_str (const void * a, const void * b)
+{
+	const char * const *ap = a;
+	const char * const *bp = b;
+	return strcmp(*ap,*bp);
+}
+*/
+
+
+
+static participant_t *
+plist_go_last (participant_t *pstart)
+{
+	participant_t *s, *p;
+	s = pstart;
+	p = NULL;
+	while (s) {
+		p = s;
+		s = s->next;
+	}
+	return p;
+}
+
+static bool_t
+unsorted (participant_t * a, participant_t * b)
+{
+	return 0 < strcmp(a->name, b->name);	
+}
+
+static participant_t *
+plist_inssort (participant_t *pstart)
+{
+	participant_t head;
+	participant_t *h, *i, *j, *q, *p;
+
+	head.next = NULL;
+	head.name = NULL;
+	head.id   = NO_ID;
+	h = &head;
+
+	i = pstart;
+
+	while (i) {
+		j = i->next;
+
+		p = h;
+		while (p->next && unsorted (i, p->next))
+			p = p->next;
+
+		q = p->next;
+		p->next = i;
+		i->next = q;
+
+		i = j;
+	}
+
+	return h->next;
+}
+
+static void
+groupvar_list_sort (group_var_t *gv)
+{
+	group_t *g;
+	player_t i;
+
+	for (i = 0; i < gv->groupfinallist_n; i++) {
+		g = gv->groupfinallist[i].group;
+		g->pstart = plist_inssort(g->pstart);
+		g->plast  = plist_go_last(g->pstart);
+	}
+}
+
+#if 0
+static int compare_str (const void * a, const void * b)
+{
+	const char * const *ap = a;
+	const char * const *bp = b;
+	return strcmp(*ap,*bp);
+}
 
 static void
 participants_list_print (FILE *f, participant_t *pstart)
@@ -1208,7 +1287,17 @@ participants_list_print (FILE *f, participant_t *pstart)
 		}
 	}
 }
+#else
+static void
+participants_list_print (FILE *f, participant_t *pstart)
+{
+	participant_t *p;
+	for (p = pstart; p != NULL; p = p->next) {
+		fprintf (f," | %s\n",p->name);
+	}
+}
 
+#endif
 
 static void
 group_output (group_t *s, group_var_t *gv, FILE *f)
@@ -1218,6 +1307,9 @@ group_output (group_t *s, group_var_t *gv, FILE *f)
 	int winconnections = 0, lossconnections = 0;
 	assert(s);
 	own_id = s->id;
+
+//	s->pstart = plist_inssort(s->pstart);
+//	s->plast  = plist_go_last(s->pstart);
 
 	participants_list_print (f, s->pstart);
 
