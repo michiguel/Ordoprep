@@ -205,8 +205,6 @@ int main (int argc, char *argv[])
 						} else 
 						if (!strcmp(long_options[longoidx].name, "group-players")) {
 							group_players_str = opt_arg;
-printf("NOT IMPLEMENTED\n");
-exit(EXIT_FAILURE); //FIXME
 						} else 
 						{
 							fprintf (stderr, "ERROR: %d\n", op);

@@ -299,13 +299,15 @@ save2pgnf_by_group(struct GAMES *gm, struct PLAYERS *pl, FILE *f, player_t *grou
 #include <string.h>
 
 static char *
-str_series(player_t n, const char *base)
+str_series(player_t n, const char *base, const char *sfx)
 {
 	const char *dot = ".";
-	const char *sfx = "pgn";
 	size_t width = 9;
 	size_t sz;
 	char *p;
+
+	assert(base);
+	assert(sfx);
 
 	sz = strlen(base) + strlen(dot) + width + strlen(dot) + strlen(sfx) + 1;
 	p = memnew (sz);
@@ -430,7 +432,7 @@ const char *groupstr = groupstr_inp;
 	//-------------------------------- Groups
 
 {
-	bool_t do_groups = groupstr != NULL || group_games_str != NULL;
+	bool_t do_groups = groupstr != NULL || group_games_str != NULL || group_players_str != NULL;
 	group_var_t *gv = NULL;
 
 	struct ENCOUNTERS Encounters;
@@ -478,17 +480,20 @@ const char *groupstr = groupstr_inp;
 
 			GV_groupid (gv, groupid);
 
+			if (!quietmode) printf ("Saving games...\n");	
+
 			for (g = 0; g < groups_n; g++) {
 				char *fname;
 				bool_t ok = FALSE;
 
-				if (gv->groupfinallist[g].count < 2)
+				if (gv->groupfinallist[g].count < 2) {
+					if (!quietmode) printf ("          group=%ld ---> %s\n",g+1, "No games withing the group, file not saved");	
 					continue;
+				}
 
-				fname = str_series(g+1,group_games_str);
-				if (fname) {
+				if (NULL != (fname = str_series(g+1,group_games_str,"pgn"))) {
 					if (NULL != (f = fopen(fname, "w"))) {
-						if (!quietmode) printf ("saving... group=%ld ---> %s\n",g+1,fname);	
+						if (!quietmode) printf ("          group=%ld ---> %s\n",g+1,fname);	
 						save2pgnf_by_group (&Games, &Players, f, groupid, g+1);
 						ok = TRUE;
 						fclose(f);
@@ -511,8 +516,36 @@ const char *groupstr = groupstr_inp;
 	}
 
 	if (group_players_str != NULL) {
-		fprintf (stderr, "group_players_str not implemented yet\n");
-		exit(EXIT_FAILURE);
+
+		FILE *f;
+		player_t g;
+		player_t groups_n = GV_counter(gv);
+
+		if (!quietmode) printf ("Saving list of players...\n");	
+
+		for (g = 0; g < groups_n; g++) {
+			char *fname;
+			bool_t ok = FALSE;
+			group_t *gr = gv->groupfinallist[g].group;
+
+			if (NULL != (fname = str_series(g+1,group_players_str,"csv"))) {
+				if (NULL != (f = fopen(fname, "w"))) {
+					participant_t *pa;
+					if (!quietmode) printf ("          group=%ld ---> %s\n",g+1,fname);	
+					for (pa = gr->pstart; NULL != pa; pa = pa->next) {				
+						fprintf (f, "\"%s\"\n",pa->name);
+					}
+					ok = TRUE;
+					fclose(f);
+				}
+				memrel(fname);
+			} 
+
+			if (!ok) {
+				fprintf(stderr, "Problems opening file for output\n");
+				exit(EXIT_FAILURE);
+			}
+		}
 	}
 
 	if (do_groups && NULL != gv) {

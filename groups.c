@@ -652,7 +652,6 @@ groupvar_build (group_var_t *gv, player_t n_plyrs, const char **name, const stru
 	groupvar_simplify(gv);
 	groupvar_finish(gv);
 	groupvar_assign_newid (gv);
-
 	groupvar_list_sort (gv);
 
 	return groupvar_counter(gv) ;
@@ -1307,9 +1306,6 @@ group_output (group_t *s, group_var_t *gv, FILE *f)
 	int winconnections = 0, lossconnections = 0;
 	assert(s);
 	own_id = s->id;
-
-//	s->pstart = plist_inssort(s->pstart);
-//	s->plast  = plist_go_last(s->pstart);
 
 	participants_list_print (f, s->pstart);
 
