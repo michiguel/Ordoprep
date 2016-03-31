@@ -1281,35 +1281,22 @@ sorted (participant_t * a, participant_t * b)
 static participant_t *
 merge (participant_t *a, participant_t *b)
 {
-	participant_t *r, *l, *t;
+	participant_t head;
+	participant_t *l, *t;
 
-	assert(a);
-	assert(b);
+	assert(a && b);
 
-	if (a == NULL && b == NULL)
-		return NULL;
-
-	if (sorted(a,b)) {
-		r = a;
-		a = a->next;
-	} else {
-		r = b;
-		b = b->next;
-	}
-	r->next = NULL;
-	l = r;
+	head.next = NULL;
+	l = &head;
 
 	while (a && b) {
 		if (sorted(a,b)) {
-			assert(a);
 			t = a;
 			a = a->next;
 		} else {
-			assert(b);
 			t = b;
 			b = b->next;
 		}
-		assert(l && t);
 		l->next = t;
 		t->next = NULL;
 		l = t;	
@@ -1321,7 +1308,7 @@ merge (participant_t *a, participant_t *b)
 	if (b == NULL) {
 		l->next = a;
 	}
-	return r;	
+	return head.next;	
 	
 }
 
@@ -1351,53 +1338,12 @@ groupvar_list_sort (group_var_t *gv)
 
 	for (i = 0; i < gv->groupfinallist_n; i++) {
 		g = gv->groupfinallist[i].group;
-#if 0
-		g->pstart = plist_inssort(g->pstart);
-#else
 		g->pstart = plist_mrgsort(g->pstart);
-#endif
 		g->plast  = plist_go_last(g->pstart);
 	}
 }
 
-#if 0
-static int compare_str (const void * a, const void * b)
-{
-	const char * const *ap = a;
-	const char * const *bp = b;
-	return strcmp(*ap,*bp);
-}
 
-static void
-participants_list_print (FILE *f, participant_t *pstart)
-{
-	size_t group_n, n, i;
-	const char **arr;
-	participant_t *p;
-
-	group_n = (size_t) participants_list_population (pstart); // how many?
-
-	if (NULL != (arr = memnew (sizeof(char *) * group_n))) {
-		
-		for (p = pstart, n = 0; p != NULL; p = p->next, n++) {
-			arr[n] = p->name;
-		}
-
-		qsort (arr, group_n, sizeof(char *), compare_str);
-
-		for (i = 0; i < group_n; i++) {
-			fprintf (f," | %s\n",arr[i]);
-		}
-
-		memrel(arr);
-	} else {
-		// catch error, not enough memory, so print unordered
-		for (p = pstart; p != NULL; p = p->next) {
-			fprintf (f," | %s\n",p->name);
-		}
-	}
-}
-#else
 static void
 participants_list_print (FILE *f, participant_t *pstart)
 {
@@ -1407,7 +1353,6 @@ participants_list_print (FILE *f, participant_t *pstart)
 	}
 }
 
-#endif
 
 static void
 group_output (group_t *s, group_var_t *gv, FILE *f)
