@@ -1201,9 +1201,10 @@ plist_go_last (participant_t *pstart)
 }
 
 static bool_t
-unsorted (participant_t * a, participant_t * b)
+sorted (participant_t * a, participant_t * b)
 {
-	return 0 < strcmp(a->name, b->name);	
+	assert(a && b);
+	return 0 > strcmp(a->name, b->name);	
 }
 
 static participant_t *
@@ -1223,7 +1224,7 @@ plist_inssort (participant_t *pstart)
 		j = i->next;
 
 		p = h;
-		while (p->next && unsorted (i, p->next))
+		while (p->next && !sorted (i, p->next))
 			p = p->next;
 
 		q = p->next;
@@ -1270,13 +1271,6 @@ get_half(participant_t *a)
 	return b;
 }
 
-static bool_t
-sorted (participant_t * a, participant_t * b)
-{
-	assert(a);
-	assert(b);
-	return !unsorted(a,b);	
-}
 
 static participant_t *
 merge (participant_t *a, participant_t *b)
