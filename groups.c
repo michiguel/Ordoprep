@@ -1236,6 +1236,113 @@ plist_inssort (participant_t *pstart)
 	return h->next;
 }
 
+//--------------
+
+static bool_t
+too_short(participant_t *a)
+{
+	participant_t *p;
+	long unsigned i = 0;
+	for (p = a; p != NULL && i < 3; p = p->next) {
+		i++;
+	}
+	return i < 3;
+}
+
+
+static participant_t *
+get_half(participant_t *a)
+{
+	participant_t *p, *s, *b;
+	long unsigned i = 0;
+
+	if (a == NULL) return NULL;
+
+	for (p = a, s = a; p != NULL; p = p->next) {
+		if ((i & 1) == 1)
+			s = s->next;
+		i++;
+	}
+
+	b = s->next;
+	s->next = NULL;
+
+	return b;
+}
+
+static bool_t
+sorted (participant_t * a, participant_t * b)
+{
+	assert(a);
+	assert(b);
+	return !unsorted(a,b);	
+}
+
+static participant_t *
+merge (participant_t *a, participant_t *b)
+{
+	participant_t *r, *l, *t;
+
+	assert(a);
+	assert(b);
+
+	if (a == NULL && b == NULL)
+		return NULL;
+
+	if (sorted(a,b)) {
+		r = a;
+		a = a->next;
+	} else {
+		r = b;
+		b = b->next;
+	}
+	r->next = NULL;
+	l = r;
+
+	while (a && b) {
+		if (sorted(a,b)) {
+			assert(a);
+			t = a;
+			a = a->next;
+		} else {
+			assert(b);
+			t = b;
+			b = b->next;
+		}
+		assert(l && t);
+		l->next = t;
+		t->next = NULL;
+		l = t;	
+	}
+
+	if (a == NULL) {
+		l->next = b;
+	}
+	if (b == NULL) {
+		l->next = a;
+	}
+	return r;	
+	
+}
+
+
+static participant_t *
+plist_mrgsort (participant_t *a)
+{
+	participant_t *b, *r;
+
+	if (too_short(a))
+		return plist_inssort(a);
+
+	b = get_half(a);
+	a = plist_mrgsort(a);
+	b = plist_mrgsort(b);
+	r = merge(a,b);
+	return r;
+}
+
+//--------------
+
 static void
 groupvar_list_sort (group_var_t *gv)
 {
@@ -1244,7 +1351,11 @@ groupvar_list_sort (group_var_t *gv)
 
 	for (i = 0; i < gv->groupfinallist_n; i++) {
 		g = gv->groupfinallist[i].group;
+#if 0
 		g->pstart = plist_inssort(g->pstart);
+#else
+		g->pstart = plist_mrgsort(g->pstart);
+#endif
 		g->plast  = plist_go_last(g->pstart);
 	}
 }
