@@ -26,18 +26,16 @@
 #include "boolean.h"
 #include "main2.h"
 #include "inidone.h"
-
 #include "strlist.h"
-
 #include "justify.h"
+#include "myhelp.h"
+#include "myopt.h"
 
 /*
 |
 |	GENERAL OPTIONS
 |
 \*--------------------------------------------------------------*/
-
-#include "myopt.h"
 
 const char *license_str = "\n"
 "   Copyright (c) 2016 Miguel A. Ballicora\n"
@@ -98,8 +96,6 @@ static double 	Min_percentage  = 0.0;
 static long int	Min_gamesplayed = 0;
 
 //
-
-#include "myhelp.h"
 
 char OPTION_LIST[1024];
 
@@ -180,7 +176,8 @@ int main (int argc, char *argv[])
 	groupstr	 = NULL;	
 	group_games_str = NULL;
 	group_players_str = NULL;
-	// reset flags
+
+	/* reset flags */
 	flags_reset(&flag);
 
 	if (NULL == (long_options = optionlist_new (SH))) {
@@ -367,8 +364,6 @@ int main (int argc, char *argv[])
 
 	strlist_done(psl);
 
-	/*==== END CALCULATION ====*/
-
 	return ret;
 }
 
@@ -385,12 +380,7 @@ static void
 example (void)
 {
 	const char *example_options = "-p raw.pgn -o shrunk.pgn";
-	fprintf (stderr, "\n"
-		"quick example: %s %s\n"
-		"%s"
-		, proginfo_name()
-		, example_options
-		, example_str);
+	fprintf (stderr, "\nquick example: %s %s\n%s", proginfo_name(), example_options, example_str);
 	return;
 }
 
@@ -398,26 +388,14 @@ static void
 usage (void)
 {
 	const char *usage_options = "[-OPTION]";
-	fprintf (stderr, "\n"
-		"usage: %s %s\n"
-		, proginfo_name()
-		, usage_options
-		);
-
-#if 0
-	fprintf (stderr, 
-		"%s"
-		, help_str
-		);
-#else
-		printlonghelp(stderr, SH);
-#endif
+	fprintf (stderr, "\nusage: %s %s\n", proginfo_name(), usage_options);
+	printlonghelp(stderr, SH);
 }
 
 //--- multipush
 
-#include "csv.h"
 #include <ctype.h>
+#include "csv.h"
 
 static char *skipblanks(char *p) {while (isspace(*p)) p++; return p;}
 
