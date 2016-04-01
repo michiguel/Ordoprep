@@ -124,12 +124,15 @@ struct helpline SH[] = {
 {'g',	"groups",			required_argument,	"FILE",	0,	"group connection info sent to FILE"},
 {'\0',	"group-games",		required_argument,	"FILE",	0,	"divide games from unconnected groups into different files. "
 															"Output names are --> FILE.*.pgn"},
-{'\0',	"group-players",	required_argument,	"FILE",	0,	"divide players (unconnected) into files --> FILE.*.txt"},
+{'\0',	"group-players",	required_argument,	"FILE",	0,	"divide players (unconnected) into files --> FILE.*.csv"},
+{'\0',	"group-max",		required_argument,	"NUM",	0,	"limit output of groups (default=1000)"},
 {0,		NULL,				0,					NULL,	0,	NULL},
 
 };
 
-
+// FIXME
+// add:
+// --major
 
 /*
 |
@@ -159,6 +162,8 @@ int main (int argc, char *argv[])
 	const char *group_games_str, *group_players_str;
 
 	int version_mode, help_mode, switch_mode, license_mode, input_mode;
+
+	long int groups_max = 1000;
 
 	/* defaults */
 	version_mode = FALSE;
@@ -193,6 +198,14 @@ int main (int argc, char *argv[])
 			case '\0':
 						if (!strcmp(long_options[longoidx].name, "silent")) {
 							flag.quietmode = TRUE;
+						} else
+						if (!strcmp(long_options[longoidx].name, "group-max")) {
+
+							if (1 != sscanf(opt_arg,"%ld", &groups_max)) {
+								fprintf(stderr, "wrong --group-max\n");
+								exit(EXIT_FAILURE);
+							} 
+
 						} else
 						if (!strcmp(long_options[longoidx].name, "aliases")) {
 							synstr = opt_arg;
@@ -356,6 +369,7 @@ int main (int argc, char *argv[])
 				, groupstr
 				, group_games_str
 				, group_players_str
+				, groups_max
 				);
 
 	/*--------------------*/

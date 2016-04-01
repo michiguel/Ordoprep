@@ -334,6 +334,7 @@ main2	( strlist_t *psl
 		, const char *groupstr_inp
 		, const char *group_games_str
 		, const char *group_players_str
+		, player_t groups_max
 )
 {
 	struct DATA *pdaba;
@@ -486,6 +487,11 @@ const char *groupstr = groupstr_inp;
 				char *fname;
 				bool_t ok = FALSE;
 
+				if (g >= groups_max) {
+					if (!quietmode) printf ("Limit of group files reached (%ld), further files not saved\n", groups_max);	
+					break;
+				}
+
 				if (gv->groupfinallist[g].count < 2) {
 					if (!quietmode) printf ("          group=%ld ---> %s\n",g+1, "No games in the group, file not saved");	
 					continue;
@@ -527,6 +533,11 @@ const char *groupstr = groupstr_inp;
 			char *fname;
 			bool_t ok = FALSE;
 			group_t *gr = gv->groupfinallist[g].group;
+
+			if (g >= groups_max) {
+				if (!quietmode) printf ("Limit of group files reached (%ld), further files not saved\n", groups_max);	
+				break;
+			}
 
 			if (NULL != (fname = str_series(g+1,group_players_str,"csv"))) {
 				if (NULL != (f = fopen(fname, "w"))) {

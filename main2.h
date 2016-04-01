@@ -54,6 +54,7 @@ main2	( strlist_t *psl
 		, const char *groupstr_inp
 		, const char *group_games_str
 		, const char *group_players_str
+		, player_t groupx_max
 );
 
 /*<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<*/
