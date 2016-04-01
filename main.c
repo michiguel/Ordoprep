@@ -117,14 +117,17 @@ struct helpline SH[] = {
 {'M',	"min-games",		required_argument,	"NUM",	0,	"discard players with less than <NUM> games played"},
 {'p',	"pgn",				required_argument,	"FILE",	0,	"input file in PGN format"},
 {'P',	"pgn-list",			required_argument,	"FILE",	0,	"text file with a list of input PGN files"},
-{'Y',	"aliases",			required_argument,	"FILE",	0,	"name synonyms (csv format). Each line: main,syn1,syn2 etc."},
+{'Y',	"synonyms",			required_argument,	"FILE",	0,	"name synonyms (comma separated value format)."
+															"Each line: main,syn1,syn2 or \"main\",\"syn1\",\"syn2\""},
+{'\0',	"aliases",			required_argument,	"FILE",	0,	"same as --synonyms"},
 {'i',	"include",			required_argument,	"FILE",	0,	"include only games of participants present in <FILE>"},
 {'x',	"exclude",			required_argument,	"FILE",	0,	"names in <FILE> will not have their games included"},
 {'\0',	"remaining",		required_argument,	"FILE",	0,	"games that were not included in the output"},
-{'\0',	"no-warnings",		no_argument,		NULL,	0,	"supress warnings of names that do not match using -x or -i"},
-{'o',	"output",			required_argument,	"FILE",	0,	"output file (text format). Default output goes to screen"},
+{'\0',	"no-warnings",		no_argument,		NULL,	0,	"supress warnings of not matching names for -x or -i"},
+{'o',	"output",			required_argument,	"FILE",	0,	"output text file. Default goes to screen"},
 {'g',	"groups",			required_argument,	"FILE",	0,	"group connection info sent to FILE"},
-{'\0',	"group-games",		required_argument,	"FILE",	0,	"divide games from unconnected groups into --> FILE.*.pgn"},
+{'\0',	"group-games",		required_argument,	"FILE",	0,	"divide games from unconnected groups into different files. "
+															"Output names are --> FILE.*.pgn"},
 {'\0',	"group-players",	required_argument,	"FILE",	0,	"divide players (unconnected) into files --> FILE.*.txt"},
 {0,		NULL,				0,					NULL,	0,	NULL},
 
@@ -193,6 +196,9 @@ int main (int argc, char *argv[])
 			case '\0':
 						if (!strcmp(long_options[longoidx].name, "silent")) {
 							flag.quietmode = TRUE;
+						} else
+						if (!strcmp(long_options[longoidx].name, "aliases")) {
+							synstr = opt_arg;
 						} else
 						if (!strcmp(long_options[longoidx].name, "no-warnings")) {
 							flag.dowarning = FALSE;

@@ -487,7 +487,7 @@ const char *groupstr = groupstr_inp;
 				bool_t ok = FALSE;
 
 				if (gv->groupfinallist[g].count < 2) {
-					if (!quietmode) printf ("          group=%ld ---> %s\n",g+1, "No games withing the group, file not saved");	
+					if (!quietmode) printf ("          group=%ld ---> %s\n",g+1, "No games in the group, file not saved");	
 					continue;
 				}
 
