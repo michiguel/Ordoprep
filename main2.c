@@ -336,6 +336,7 @@ main2	( strlist_t *psl
 		, const char *group_players_str
 		, player_t groups_max
 		, bool_t only_major
+		, bool_t std_input
 )
 {
 	struct DATA *pdaba;
@@ -355,7 +356,7 @@ gamesnum_t inter = 0;
 
 	/*==== set input ====*/
 
-	if (NULL != (pdaba = database_init_frompgn(psl, synstr, quietmode))) {
+	if (NULL != (pdaba = database_init_frompgn(std_input?stdin:NULL, psl, synstr, quietmode))) {
 		if (0 == pdaba->n_players || 0 == pdaba->n_games) {
 			fprintf (stderr, "ERROR: Input file contains no games\n");
 			return EXIT_FAILURE; 			

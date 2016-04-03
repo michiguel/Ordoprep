@@ -113,6 +113,7 @@ struct helpline SH[] = {
 {'M',	"min-games",		required_argument,	"NUM",	0,	"discard players with less than <NUM> games played"},
 {'p',	"pgn",				required_argument,	"FILE",	0,	"input file in PGN format"},
 {'P',	"pgn-list",			required_argument,	"FILE",	0,	"text file with a list of input PGN files"},
+{'\0',	"stdin",			no_argument,		NULL,	0,	"input will be taken from stdin"},
 {'Y',	"synonyms",			required_argument,	"FILE",	0,	"name synonyms (comma separated value format)."
 															"Each line: main,syn1,syn2 or \"main\",\"syn1\",\"syn2\""},
 {'\0',	"aliases",			required_argument,	"FILE",	0,	"same as --synonyms"},
@@ -132,9 +133,6 @@ struct helpline SH[] = {
 
 };
 
-// FIXME
-// add:
-// --major
 
 /*
 |
@@ -154,7 +152,7 @@ int main (int argc, char *argv[])
 
 	int ret;
 
-	bool_t textf_opened, only_major;
+	bool_t textf_opened, only_major, std_input;
 	FILE *textf;
 
 	int op;
@@ -174,6 +172,7 @@ int main (int argc, char *argv[])
 	switch_mode  = FALSE;
 	input_mode   = FALSE;
 	only_major	 = FALSE;
+	std_input	 = FALSE;	
 	single_pgn   = NULL;
 	multi_pgn    = NULL;
 	synstr		 = NULL;
@@ -201,6 +200,9 @@ int main (int argc, char *argv[])
 			case '\0':
 						if (!strcmp(long_options[longoidx].name, "silent")) {
 							flag.quietmode = TRUE;
+						} else
+						if (!strcmp(long_options[longoidx].name, "stdin")) {
+							std_input = TRUE;
 						} else
 						if (!strcmp(long_options[longoidx].name, "group-max")) {
 
@@ -291,7 +293,7 @@ int main (int argc, char *argv[])
  			printf ("%s\n", license_str);
 		return EXIT_SUCCESS;
 	}
-	if (argc < 2) {
+	if (argc < 2 && !std_input) {
 		fprintf (stderr, "%s %s\n",proginfo_name(),proginfo_version());
 		fprintf (stderr, "%s", copyright_str);
 		fprintf (stderr, "for help type:\n%s -h\n\n", proginfo_name());
@@ -308,7 +310,7 @@ int main (int argc, char *argv[])
 		usage();
 		exit (EXIT_SUCCESS);
 	}
-	if (!input_mode && argc == opt_index) {
+	if (!std_input && !input_mode && argc == opt_index) {
 		fprintf (stderr, "Need file name to proceed\n");
 		exit(EXIT_FAILURE);
 	}
@@ -377,6 +379,7 @@ int main (int argc, char *argv[])
 				, group_players_str
 				, groups_max
 				, only_major
+				, std_input
 				);
 
 	/*--------------------*/

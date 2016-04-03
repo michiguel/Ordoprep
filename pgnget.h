@@ -23,6 +23,8 @@
 #define H_PGNGET
 /*>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>*/
 
+#include <stdio.h>
+
 #include "boolean.h"
 #include "ordolim.h"
 #include "datatype.h"
@@ -37,7 +39,7 @@ enum RESULTS {
 	IGNORED = 4
 };
 
-extern struct DATA *database_init_frompgn (strlist_t *sl, const char *synfile_name, bool_t quiet);
+extern struct DATA *database_init_frompgn (FILE *finp, strlist_t *sl, const char *synfile_name, bool_t quiet);
 extern void 		database_done (struct DATA *p);
 
 #include "mytypes.h"

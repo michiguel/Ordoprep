@@ -28,7 +28,10 @@
 bool_t
 strlist_init (strlist_t *sl)
 {
-	strnode_t *ph = &(sl->prehead);
+	strnode_t *ph;
+	if (sl == NULL) 
+		return FALSE;
+	ph = &(sl->prehead);
 	ph->str = NULL;
 	ph->nxt = NULL;
 	sl->curr = NULL;

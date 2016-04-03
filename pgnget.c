@@ -175,7 +175,7 @@ structdata_done (struct DATA *d)
 #include "strlist.h"
 
 struct DATA *
-database_init_frompgn (strlist_t *sl, const char *synfile_name, bool_t quiet)
+database_init_frompgn (FILE *finp, strlist_t *sl, const char *synfile_name, bool_t quiet)
 {
 
 	struct DATA *pDAB = NULL;
@@ -201,6 +201,12 @@ database_init_frompgn (strlist_t *sl, const char *synfile_name, bool_t quiet)
 		}
 		if (ok) pgn = strlist_next(sl);
 	}
+
+	if (ok && finp) {
+		//if (!quiet)	printf ("\nFile: %s\n","standard input");
+		ok = fpgnscan (finp, quiet, pDAB);
+	}
+
 	return ok? pDAB: NULL;
 
 	#if 0
@@ -706,6 +712,9 @@ pgn_result_collect (struct pgn_result *p, struct DATA *d)
 	const char *tagstr;
 	uint32_t 	taghsh;
 
+	assert(p);
+	assert(d);
+
 	tagstr = p->wtag;
 	taghsh = namehash(tagstr);
 
@@ -798,7 +807,9 @@ fpgnscan (FILE *fpgn, bool_t quiet, struct DATA *d)
 	long int			game_counter = 0;
 	int					games_x_dot  = 2000;
 
-	if (NULL == fpgn)
+	assert(d);
+
+	if (NULL == fpgn || NULL == d)
 		return FALSE;
 
 	if (!quiet) 

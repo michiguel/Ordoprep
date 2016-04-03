@@ -56,6 +56,7 @@ main2	( strlist_t *psl
 		, const char *group_players_str
 		, player_t groupx_max
 		, bool_t only_major
+		, bool_t std_input
 );
 
 /*<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<*/
