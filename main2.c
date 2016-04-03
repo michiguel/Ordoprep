@@ -350,8 +350,8 @@ main2	( strlist_t *psl
 bool_t do_groups;
 group_var_t *gv = NULL;
 struct ENCOUNTERS Encounters;
-gamesnum_t intra;
-gamesnum_t inter;
+gamesnum_t intra = 0;
+gamesnum_t inter = 0;
 
 	/*==== set input ====*/
 
@@ -491,18 +491,18 @@ gamesnum_t inter;
 				bool_t ok = FALSE;
 
 				if (g >= groups_max) {
-					if (!quietmode) printf ("Limit of group files reached (%ld), further files not saved\n", groups_max);	
+					if (!quietmode) printf ("Limit of group files reached (%ld), further files not saved\n", (long) groups_max);	
 					break;
 				}
 
 				if (gv->groupfinallist[g].count < 2) {
-					if (!quietmode) printf ("          group=%ld ---> %s\n",g+1, "No games in the group, file not saved");	
+					if (!quietmode) printf ("          group=%ld ---> %s\n",(long)g+1, "No games in the group, file not saved");	
 					continue;
 				}
 
 				if (NULL != (fname = str_series(g+1,group_games_str,"pgn"))) {
 					if (NULL != (f = fopen(fname, "w"))) {
-						if (!quietmode) printf ("          group=%ld ---> %s\n",g+1,fname);	
+						if (!quietmode) printf ("          group=%ld ---> %s\n",(long)g+1,fname);	
 						save2pgnf_by_group (&Games, &Players, f, groupid, g+1);
 						ok = TRUE;
 						fclose(f);
@@ -538,14 +538,14 @@ gamesnum_t inter;
 			group_t *gr = gv->groupfinallist[g].group;
 
 			if (g >= groups_max) {
-				if (!quietmode) printf ("Limit of group files reached (%ld), further files not saved\n", groups_max);	
+				if (!quietmode) printf ("Limit of group files reached (%ld), further files not saved\n", (long)groups_max);	
 				break;
 			}
 
 			if (NULL != (fname = str_series(g+1,group_players_str,"csv"))) {
 				if (NULL != (f = fopen(fname, "w"))) {
 					participant_t *pa;
-					if (!quietmode) printf ("          group=%ld ---> %s\n",g+1,fname);	
+					if (!quietmode) printf ("          group=%ld ---> %s\n",(long)g+1,fname);	
 					for (pa = gr->pstart; NULL != pa; pa = pa->next) {				
 						fprintf (f, "\"%s\"\n",pa->name);
 					}
