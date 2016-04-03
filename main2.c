@@ -424,7 +424,6 @@ main2	( strlist_t *psl
 		return EXIT_FAILURE; 			
 	}
 
-
 	// info output
 	if (!quietmode) {
 		printf ("Total games         %8ld\n", (long)Game_stats.white_wins
@@ -587,14 +586,11 @@ main2	( strlist_t *psl
 		} while (discard(quietmode, &Players, &Games));
 	}
 
-
+	//---- OUTPUT, major or all? ------------------------------------------------
 	if (flag->only_major) {
 		player_t *groupid;
 		if (NULL != (groupid = memnew(sizeof(player_t) * (size_t)Players.n))) {
 			GV_groupid (gv, groupid);
-
-
-
 			save2pgnf_by_group (&Games, &Players, textf, groupid, 1);
 			memrel(groupid);
 		} else {
@@ -604,6 +600,7 @@ main2	( strlist_t *psl
 	} else {
 		save2pgnf(&Games, &Players, textf);
 	}
+	//---------------------------------------------------------------------------
 
 	if (NULL != remainin_str) {
 		FILE *remf;
