@@ -94,8 +94,6 @@ struct GROUPVAR {
 	player_t		nplayers;
 	player_t	*	groupbelong;
 	player_t *		getnewid;
-//	group_t **		groupfinallist;
-
 	groupcell_t	*	groupfinallist;
 	player_t		groupfinallist_n;
 	node_t	*		node;
@@ -111,27 +109,10 @@ typedef struct GROUPVAR group_var_t;
 
 
 
-extern player_t	groupvar_build(group_var_t *gv, player_t N_plyers, const char **name, const struct PLAYERS *players, const struct ENCOUNTERS *encounters);
-
-extern bool_t 	groupvar_init (group_var_t *gv, player_t nplayers, gamesnum_t nenc);
-
-extern void 	groupvar_done (group_var_t *gv);
-
-extern bool_t	groups_process	( const struct ENCOUNTERS *encounters
-								, const struct PLAYERS *players
-								, FILE *groupf
-								, player_t *pn
-								, gamesnum_t * pN_intra
-								, gamesnum_t * pN_inter
-								, player_t *groupid_out
-								);
-
-extern bool_t	groups_process_to_count ( const struct ENCOUNTERS *encounters
-										, const struct PLAYERS *players
-										, player_t *n);
-
-extern bool_t	groups_are_ok			( const struct ENCOUNTERS *encounters
-										, const struct PLAYERS *players);
+extern player_t			groupvar_build(group_var_t *gv, player_t N_plyers
+											, const char **name, const struct PLAYERS *players, const struct ENCOUNTERS *encounters);
+extern bool_t 			groupvar_init (group_var_t *gv, player_t nplayers, gamesnum_t nenc);
+extern void 			groupvar_done (group_var_t *gv);
 
 extern group_var_t *	GV_make	(const struct ENCOUNTERS *encounters, const struct PLAYERS *players);
 extern group_var_t *	GV_kill (group_var_t *gv);
