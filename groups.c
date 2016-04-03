@@ -1250,7 +1250,7 @@ too_short(participant_t *a)
 	return i < 3;
 }
 
-
+#if 1
 static participant_t *
 get_half(participant_t *a)
 {
@@ -1270,7 +1270,28 @@ get_half(participant_t *a)
 
 	return b;
 }
+#else
+static participant_t *
+get_half(participant_t *a)
+{
+	participant_t *r, *b;
 
+	if (a == NULL) return NULL;
+
+	r = b = a->next;
+
+	for (;;) {
+		if (NULL == b) break;
+		a->next = b->next;
+		a = b->next;
+		if (NULL == a) break;
+		b->next = a->next;
+		b = a->next;
+	}
+
+	return r;
+}
+#endif
 
 static participant_t *
 merge (participant_t *a, participant_t *b)

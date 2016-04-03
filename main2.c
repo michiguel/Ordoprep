@@ -335,6 +335,7 @@ main2	( strlist_t *psl
 		, const char *group_games_str
 		, const char *group_players_str
 		, player_t groups_max
+		, bool_t only_major
 )
 {
 	struct DATA *pdaba;
@@ -344,7 +345,13 @@ main2	( strlist_t *psl
 	bool_t min_perce = flag->min_percentage_use;
 	bool_t discard_m = flag->discard_mode;
 
-const char *groupstr = groupstr_inp; 
+	const char *groupstr = groupstr_inp; 
+
+bool_t do_groups;
+group_var_t *gv = NULL;
+struct ENCOUNTERS Encounters;
+gamesnum_t intra;
+gamesnum_t inter;
 
 	/*==== set input ====*/
 
@@ -432,16 +439,12 @@ const char *groupstr = groupstr_inp;
 
 	//-------------------------------- Groups
 
-{
-	bool_t do_groups = groupstr != NULL || group_games_str != NULL || group_players_str != NULL;
-	group_var_t *gv = NULL;
-
-	struct ENCOUNTERS Encounters;
-	gamesnum_t intra;
-	gamesnum_t inter;
+	do_groups = groupstr != NULL || 
+				group_games_str != NULL || 
+				group_players_str != NULL || 
+				only_major;
 
 	if (do_groups) {
-
 		if (encounters_init (Games.n, &Encounters)) {
 			encounters_calculate (ENCOUNTERS_FULL, &Games, Players.flagged, &Encounters);
 			if (NULL != (gv = GV_make (&Encounters, &Players))) {
@@ -559,12 +562,10 @@ const char *groupstr = groupstr_inp;
 		}
 	}
 
-	if (do_groups && NULL != gv) {
+	if (do_groups && !only_major && NULL != gv) {
 		gv = GV_kill(gv);
 		exit(EXIT_SUCCESS);
 	}
-
-}
 
 	/*==== CALCULATIONS ====*/
 
@@ -585,7 +586,23 @@ const char *groupstr = groupstr_inp;
 		} while (discard(quietmode, &Players, &Games));
 	}
 
-	save2pgnf(&Games, &Players, textf);
+
+	if (only_major) {
+		player_t *groupid;
+		if (NULL != (groupid = memnew(sizeof(player_t) * (size_t)Players.n))) {
+			GV_groupid (gv, groupid);
+
+
+
+			save2pgnf_by_group (&Games, &Players, textf, groupid, 1);
+			memrel(groupid);
+		} else {
+			fprintf (stderr, "not enough memory for encounters allocation\n");
+			exit(EXIT_FAILURE);
+		}
+	} else {
+		save2pgnf(&Games, &Players, textf);
+	}
 
 	if (NULL != remainin_str) {
 		FILE *remf;
@@ -596,6 +613,10 @@ const char *groupstr = groupstr_inp;
 			fprintf (stderr, "Problems to output remaining games\n");
 			return EXIT_FAILURE; 
 		}
+	}
+
+	if (do_groups && NULL != gv) {
+		gv = GV_kill(gv);
 	}
 
 	return EXIT_SUCCESS;

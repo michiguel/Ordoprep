@@ -121,11 +121,13 @@ struct helpline SH[] = {
 {'\0',	"remaining",		required_argument,	"FILE",	0,	"games that were not included in the output"},
 {'\0',	"no-warnings",		no_argument,		NULL,	0,	"supress warnings of not matching names for -x or -i"},
 {'o',	"output",			required_argument,	"FILE",	0,	"output text file. Default goes to screen"},
+{'\0',	"major-only",		no_argument,		NULL,	0,	"output games only from the major connected group"},
 {'g',	"groups",			required_argument,	"FILE",	0,	"group connection info sent to FILE"},
 {'\0',	"group-games",		required_argument,	"FILE",	0,	"divide games from unconnected groups into different files. "
 															"Output names are --> FILE.*.pgn"},
 {'\0',	"group-players",	required_argument,	"FILE",	0,	"divide players (unconnected) into files --> FILE.*.csv"},
 {'\0',	"group-max",		required_argument,	"NUM",	0,	"limit output of groups (default=1000)"},
+
 {0,		NULL,				0,					NULL,	0,	NULL},
 
 };
@@ -152,7 +154,7 @@ int main (int argc, char *argv[])
 
 	int ret;
 
-	bool_t textf_opened;
+	bool_t textf_opened, only_major;
 	FILE *textf;
 
 	int op;
@@ -171,6 +173,7 @@ int main (int argc, char *argv[])
 	help_mode    = FALSE;
 	switch_mode  = FALSE;
 	input_mode   = FALSE;
+	only_major	 = FALSE;
 	single_pgn   = NULL;
 	multi_pgn    = NULL;
 	synstr		 = NULL;
@@ -206,6 +209,9 @@ int main (int argc, char *argv[])
 								exit(EXIT_FAILURE);
 							} 
 
+						} else
+						if (!strcmp(long_options[longoidx].name, "only-major-group")) {
+							only_major = TRUE;
 						} else
 						if (!strcmp(long_options[longoidx].name, "aliases")) {
 							synstr = opt_arg;
@@ -370,6 +376,7 @@ int main (int argc, char *argv[])
 				, group_games_str
 				, group_players_str
 				, groups_max
+				, only_major
 				);
 
 	/*--------------------*/
