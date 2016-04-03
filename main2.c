@@ -348,19 +348,15 @@ main2	( strlist_t *psl
 
 	const char *groupstr = groupstr_inp; 
 
-bool_t do_groups;
-group_var_t *gv = NULL;
-struct ENCOUNTERS Encounters;
-gamesnum_t intra = 0;
-gamesnum_t inter = 0;
-
-player_t groups_max = (player_t)flag->groups_max;
-bool_t only_major = flag->only_major;
-bool_t std_input = flag->std_input;
+	bool_t do_groups;
+	group_var_t *gv = NULL;
+	struct ENCOUNTERS Encounters;
+	gamesnum_t intra = 0;
+	gamesnum_t inter = 0;
 
 	/*==== set input ====*/
 
-	if (NULL != (pdaba = database_init_frompgn(std_input?stdin:NULL, psl, synstr, quietmode))) {
+	if (NULL != (pdaba = database_init_frompgn(flag->std_input?stdin:NULL, psl, synstr, quietmode))) {
 		if (0 == pdaba->n_players || 0 == pdaba->n_games) {
 			fprintf (stderr, "ERROR: Input file contains no games\n");
 			return EXIT_FAILURE; 			
@@ -447,7 +443,7 @@ bool_t std_input = flag->std_input;
 	do_groups = groupstr != NULL || 
 				group_games_str != NULL || 
 				group_players_str != NULL || 
-				only_major;
+				flag->only_major;
 
 	if (do_groups) {
 		if (encounters_init (Games.n, &Encounters)) {
@@ -495,8 +491,8 @@ bool_t std_input = flag->std_input;
 				char *fname;
 				bool_t ok = FALSE;
 
-				if (g >= groups_max) {
-					if (!quietmode) printf ("Limit of group files reached (%ld), further files not saved\n", (long) groups_max);	
+				if (g >= flag->groups_max) {
+					if (!quietmode) printf ("Limit of group files reached (%ld), further files not saved\n", flag->groups_max);	
 					break;
 				}
 
@@ -542,8 +538,8 @@ bool_t std_input = flag->std_input;
 			bool_t ok = FALSE;
 			group_t *gr = gv->groupfinallist[g].group;
 
-			if (g >= groups_max) {
-				if (!quietmode) printf ("Limit of group files reached (%ld), further files not saved\n", (long)groups_max);	
+			if (g >= flag->groups_max) {
+				if (!quietmode) printf ("Limit of group files reached (%ld), further files not saved\n", flag->groups_max);	
 				break;
 			}
 
@@ -567,7 +563,7 @@ bool_t std_input = flag->std_input;
 		}
 	}
 
-	if (do_groups && !only_major && NULL != gv) {
+	if (do_groups && !flag->only_major && NULL != gv) {
 		gv = GV_kill(gv);
 		exit(EXIT_SUCCESS);
 	}
@@ -592,7 +588,7 @@ bool_t std_input = flag->std_input;
 	}
 
 
-	if (only_major) {
+	if (flag->only_major) {
 		player_t *groupid;
 		if (NULL != (groupid = memnew(sizeof(player_t) * (size_t)Players.n))) {
 			GV_groupid (gv, groupid);
