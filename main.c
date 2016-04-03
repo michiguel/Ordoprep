@@ -210,7 +210,7 @@ int main (int argc, char *argv[])
 							} 
 
 						} else
-						if (!strcmp(long_options[longoidx].name, "only-major-group")) {
+						if (!strcmp(long_options[longoidx].name, "major-only")) {
 							only_major = TRUE;
 						} else
 						if (!strcmp(long_options[longoidx].name, "aliases")) {
