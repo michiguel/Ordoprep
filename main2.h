@@ -32,6 +32,9 @@ struct FLAGS {
 	bool_t discard_mode; // DISCARD_MODE	
 	bool_t min_percentage_use;
 	bool_t min_gamesplayed_use;
+	bool_t only_major;
+	bool_t std_input;
+	long int groups_max;
 };
 
 extern void
@@ -54,9 +57,6 @@ main2	( strlist_t *psl
 		, const char *groupstr_inp
 		, const char *group_games_str
 		, const char *group_players_str
-		, player_t groupx_max
-		, bool_t only_major
-		, bool_t std_input
 );
 
 /*<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<*/

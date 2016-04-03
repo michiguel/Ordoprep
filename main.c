@@ -152,7 +152,7 @@ int main (int argc, char *argv[])
 
 	int ret;
 
-	bool_t textf_opened, only_major, std_input;
+	bool_t textf_opened;
 	FILE *textf;
 
 	int op;
@@ -163,16 +163,12 @@ int main (int argc, char *argv[])
 
 	int version_mode, help_mode, switch_mode, license_mode, input_mode;
 
-	long int groups_max = 1000;
-
 	/* defaults */
 	version_mode = FALSE;
 	license_mode = FALSE;
 	help_mode    = FALSE;
 	switch_mode  = FALSE;
 	input_mode   = FALSE;
-	only_major	 = FALSE;
-	std_input	 = FALSE;	
 	single_pgn   = NULL;
 	multi_pgn    = NULL;
 	synstr		 = NULL;
@@ -202,18 +198,18 @@ int main (int argc, char *argv[])
 							flag.quietmode = TRUE;
 						} else
 						if (!strcmp(long_options[longoidx].name, "stdin")) {
-							std_input = TRUE;
+							flag.std_input = TRUE;
 						} else
 						if (!strcmp(long_options[longoidx].name, "group-max")) {
 
-							if (1 != sscanf(opt_arg,"%ld", &groups_max)) {
+							if (1 != sscanf(opt_arg,"%ld", &flag.groups_max)) {
 								fprintf(stderr, "wrong --group-max\n");
 								exit(EXIT_FAILURE);
 							} 
 
 						} else
 						if (!strcmp(long_options[longoidx].name, "major-only")) {
-							only_major = TRUE;
+							flag.only_major = TRUE;
 						} else
 						if (!strcmp(long_options[longoidx].name, "aliases")) {
 							synstr = opt_arg;
@@ -293,7 +289,7 @@ int main (int argc, char *argv[])
  			printf ("%s\n", license_str);
 		return EXIT_SUCCESS;
 	}
-	if (argc < 2 && !std_input) {
+	if (argc < 2 && !flag.std_input) {
 		fprintf (stderr, "%s %s\n",proginfo_name(),proginfo_version());
 		fprintf (stderr, "%s", copyright_str);
 		fprintf (stderr, "for help type:\n%s -h\n\n", proginfo_name());
@@ -310,7 +306,7 @@ int main (int argc, char *argv[])
 		usage();
 		exit (EXIT_SUCCESS);
 	}
-	if (!std_input && !input_mode && argc == opt_index) {
+	if (!flag.std_input && !input_mode && argc == opt_index) {
 		fprintf (stderr, "Need file name to proceed\n");
 		exit(EXIT_FAILURE);
 	}
@@ -377,9 +373,6 @@ int main (int argc, char *argv[])
 				, groupstr
 				, group_games_str
 				, group_players_str
-				, groups_max
-				, only_major
-				, std_input
 				);
 
 	/*--------------------*/

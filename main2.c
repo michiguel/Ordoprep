@@ -41,6 +41,9 @@ flags_reset(struct FLAGS *f)
 	f->discard_mode = FALSE; 	
 	f->min_percentage_use = FALSE;
 	f->min_gamesplayed_use = FALSE;
+	f->only_major = FALSE;
+	f->std_input = FALSE;
+	f->groups_max = 1000;
 }
 
 static long	*perf   ;
@@ -334,9 +337,6 @@ main2	( strlist_t *psl
 		, const char *groupstr_inp
 		, const char *group_games_str
 		, const char *group_players_str
-		, player_t groups_max
-		, bool_t only_major
-		, bool_t std_input
 )
 {
 	struct DATA *pdaba;
@@ -353,6 +353,10 @@ group_var_t *gv = NULL;
 struct ENCOUNTERS Encounters;
 gamesnum_t intra = 0;
 gamesnum_t inter = 0;
+
+player_t groups_max = (player_t)flag->groups_max;
+bool_t only_major = flag->only_major;
+bool_t std_input = flag->std_input;
 
 	/*==== set input ====*/
 
