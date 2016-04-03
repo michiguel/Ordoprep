@@ -31,6 +31,8 @@ where `-d` tells Ordoprep to discard players with 100% or 0% performance,
 `-m5` will exclude players who did not reach a 5% performance, and `-g20` will exclude players with less than 20 games.
 After all this, `shrunk.pgn` could be used as input for [Ordo](https://github.com/michiguel/Ordo)
 
+If the switch `--stdin` is used, the input is taken from the standard input (so pipes could be used)
+
 #### Multiple input files
 Ordoprep can combine several pgn files as input (limited by the memory of the system).
 Each file could be listed after the switch `--`.
@@ -94,6 +96,7 @@ usage: ordoprep [-OPTION]
  -M, --min-games=NUM      discard players with less than <NUM> games played
  -p, --pgn=FILE           input file in PGN format
  -P, --pgn-list=FILE      text file with a list of input PGN files
+     --stdin              input will be taken from stdin
  -Y, --synonyms=FILE      name synonyms (comma separated value format).Each 
                           line: main,syn1,syn2 or "main","syn1","syn2"
      --aliases=FILE       same as --synonyms
@@ -108,7 +111,6 @@ usage: ordoprep [-OPTION]
                           files. Output names are --> FILE.*.pgn
      --group-players=FILE divide players (unconnected) into files --> FILE.*.csv
      --group-max=NUM      limit output of groups (default=1000)
-
 ```
 
 #### Acknowledgments
