@@ -122,7 +122,7 @@ struct helpline SH[] = {
 {'\0',	"no-warnings",		no_argument,		NULL,	0,	"supress warnings of not matching names for -x or -i"},
 {'o',	"output",			required_argument,	"FILE",	0,	"output text file. Default goes to screen"},
 {'\0',	"major-only",		no_argument,		NULL,	0,	"output games only from the major connected group"},
-{'g',	"groups",			required_argument,	"FILE",	0,	"group connection info sent to FILE"},
+{'g',	"groups",			required_argument,	"FILE",	0,	"send group connection info to FILE"},
 {'\0',	"group-games",		required_argument,	"FILE",	0,	"divide games from unconnected groups into different files. "
 															"Output names are --> FILE.*.pgn"},
 {'\0',	"group-players",	required_argument,	"FILE",	0,	"divide players (unconnected) into files --> FILE.*.csv"},

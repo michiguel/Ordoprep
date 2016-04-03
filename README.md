@@ -83,23 +83,31 @@ quick example: `ordoprep -p raw.pgn -o shrunk.pgn`
 
 usage: ordoprep [-OPTION]
 
- -h, --help           print this help
- -H, --show-switches  print just the switches
- -v, --version        print version number and exit
- -L, --license        display license information
- -q, --quiet          quiet (no screen progress updates)
-     --silent         same as --quiet
- -d, --no-perfects    discard players with no wins or no losses
- -m, --min-perf=NUM   discard players with a % performance lower than <NUM>
- -g, --min-games=NUM  discard players with less than <NUM> number of games played
- -p, --pgn=FILE       input file in PGN format
- -P, --pgn-list=FILE  text file with a list of input PGN files
- -Y, --aliases=FILE   name synonyms (csv format). Each line: main,syn1,syn2 etc.
- -i, --include=FILE   include only games of participants present in <FILE>
- -x, --exclude=FILE   names in <FILE> will not have their games included
-     --remaining=FILE games that were not included in the output
-     --no-warnings    supress warnings of names that do not match using -x or -i
- -o, --output=FILE    output file (text format). Default output goes to screen
+ -h, --help               print this help
+ -H, --show-switches      print just the switches
+ -v, --version            print version number and exit
+ -L, --license            display license information
+ -q, --quiet              quiet (no screen progress updates)
+     --silent             same as --quiet
+ -d, --no-perfects        discard players with no wins or no losses
+ -m, --min-perf=NUM       discard players with a % performance lower than <NUM>
+ -M, --min-games=NUM      discard players with less than <NUM> games played
+ -p, --pgn=FILE           input file in PGN format
+ -P, --pgn-list=FILE      text file with a list of input PGN files
+ -Y, --synonyms=FILE      name synonyms (comma separated value format).Each 
+                          line: main,syn1,syn2 or "main","syn1","syn2"
+     --aliases=FILE       same as --synonyms
+ -i, --include=FILE       include only games of participants present in <FILE>
+ -x, --exclude=FILE       names in <FILE> will not have their games included
+     --remaining=FILE     games that were not included in the output
+     --no-warnings        supress warnings of not matching names for -x or -i
+ -o, --output=FILE        output text file. Default goes to screen
+     --major-only         output games only from the major connected group
+ -g, --groups=FILE        send group connection info to FILE
+     --group-games=FILE   divide games from unconnected groups into different 
+                          files. Output names are --> FILE.*.pgn
+     --group-players=FILE divide players (unconnected) into files --> FILE.*.csv
+     --group-max=NUM      limit output of groups (default=1000)
 
 ```
 
