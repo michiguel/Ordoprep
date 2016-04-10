@@ -814,18 +814,12 @@ groupvar_build (group_var_t *gv, player_t n_plyrs, const char **name, const stru
 
 		groupset_reset_finding (gv);
 
-#if 0
-		for (e = 0 ; e < sp->N_se2; e++) {
-			sup_enc2group (&sp->SE2[e], gv);
-		}
-#else
 		for (e = 0 ; e < SElnk_n; e++) {
 			selink2group (SElnk[e].iwin, SElnk[e].ilos, gv);
 		}
-#endif
 
-		printf ("%8.3lf | multi sup_enc2group done\n", getcl(CL));
 		supporting_encmem_done (sp, SElnk);
+
 	} else {
 		fprintf (stderr, "No memory available\n");
 		exit(EXIT_FAILURE);
