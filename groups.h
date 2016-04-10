@@ -99,6 +99,8 @@ struct GROUPVAR {
 	node_t	*		node;
 	player_t *		gchain;
 
+	group_t **		tofindgroup;
+
 	struct GROUP_BUFFER 		groupbuffer;
 	struct PARTICIPANT_BUFFER	participantbuffer;
 	struct CONNECT_BUFFER		connectionbuffer;

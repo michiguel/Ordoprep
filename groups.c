@@ -198,12 +198,14 @@ groupvar_init (group_var_t *gv, player_t nplayers, gamesnum_t nenc)
 	groupcell_t *c;
 	node_t 		*d;
 	player_t	*e;
+	group_t		**f;
 
 	size_t		sa = sizeof(player_t);
 	size_t		sb = sizeof(player_t);
 	size_t		sc = sizeof(groupcell_t *);
 	size_t		sd = sizeof(node_t);
 	size_t		se = sizeof(player_t);
+	size_t		sf = sizeof(group_t *);
 
 	if (NULL == (a = memnew (sa * (size_t)nplayers))) {
 		return FALSE;
@@ -229,6 +231,14 @@ groupvar_init (group_var_t *gv, player_t nplayers, gamesnum_t nenc)
 		memrel(c);
 		memrel(d);
 		return FALSE;
+	} else 
+	if (NULL == (f = memnew (sf * (size_t)nplayers))) {
+		memrel(a);
+		memrel(b);
+		memrel(c);
+		memrel(d);
+		memrel(e);
+		return FALSE;
 	}
 
 	gv->groupbelong = a;
@@ -236,6 +246,7 @@ groupvar_init (group_var_t *gv, player_t nplayers, gamesnum_t nenc)
 	gv->groupfinallist = c;
 	gv->node = d;
 	gv->gchain = e;
+	gv->tofindgroup = f;
 
 	gv->nplayers = nplayers;
 	gv->groupfinallist_n = 0;
@@ -266,12 +277,15 @@ groupvar_done (group_var_t *gv)
 	if (gv->groupfinallist) memrel (gv->groupfinallist);
 	if (gv->node) 			memrel (gv->node);
 	if (gv->gchain) 		memrel (gv->gchain);
+	if (gv->tofindgroup) 	memrel (gv->tofindgroup);
+
 
 	gv->groupbelong = NULL;
 	gv->getnewid = NULL;
 	gv->groupfinallist = NULL;
 	gv->node = NULL;
 	gv->gchain = NULL;
+	gv->tofindgroup = NULL;
 
 	gv->groupfinallist_n = 0;
 	gv->nplayers = 0;
