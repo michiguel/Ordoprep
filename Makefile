@@ -1,5 +1,6 @@
 CC = gcc
 CFLAGS = -DNDEBUG -flto -I myopt 
+CFLAGP = -DNDEBUG -pg -I myopt 
 CFLAGSD = -I myopt
 WARN = -Wwrite-strings -Wconversion -Wshadow -Wparentheses -Wlogical-op -Wunused -Wmissing-prototypes -Wmissing-declarations -Wdeclaration-after-statement -W -Wall -Wextra
 OPT = -O3
@@ -18,6 +19,9 @@ $(EXE): $(OBJ)
 
 all:
 	$(CC) $(CFLAGS) $(WARN) $(OPT) -o $(EXE) $(SRC) $(LIBFLAGS)
+
+profile:
+	$(CC) $(CFLAGP) $(WARN) -o $(EXE) $(SRC) $(LIBFLAGS)
 
 debug:
 	$(CC) $(CFLAGSD) $(WARN) $(OPT) -o $(EXE) $(SRC) $(LIBFLAGS)
