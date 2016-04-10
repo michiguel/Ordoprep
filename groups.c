@@ -458,10 +458,14 @@ add_beat_connection (group_var_t *gv, group_t *g, struct NODE *pnode)
 	} else {
 		connection_t *l, *c;
 		bool_t found = FALSE;
+/*
+// Not really necessary if scan counters properly sorted and eliminated duplicates
+
 		for (c = g->cstart; !found && c != NULL; c = c->next) {
 			node_t *nd = c->node;
 			found = nd && nd->group && nd->group->id == group_id;
 		}
+*/
 		if (!found) {
 			nw = connection_new(gv);
 			nw->next = NULL;
@@ -470,6 +474,7 @@ add_beat_connection (group_var_t *gv, group_t *g, struct NODE *pnode)
 			l->next  = nw;
 			g->clast = nw;
 		}
+
 	}		
 }
 
@@ -557,7 +562,14 @@ static int compare_selink (const void * a, const void * b)
 {
 	const selink_t *sa = a;
 	const selink_t *sb = b;
-	return sa->iwin < sb->iwin? 1: (sa->ilos < sb->ilos? -1:0);
+
+	if (sa->iwin < sb->iwin) return -1;
+	if (sa->iwin > sb->iwin) return 1;
+
+	if (sa->ilos < sb->ilos) return -1;
+	if (sa->ilos > sb->ilos) return 1;
+
+	return 0;
 }
 
 static player_t get_iwin (struct ENC *pe);
@@ -565,6 +577,13 @@ static player_t get_ilos (struct ENC *pe);
 
 static bool_t encounter_is_SW (const struct ENC *e) {return e->W  > 0 && e->D == 0 && e->L == 0;}
 static bool_t encounter_is_SL (const struct ENC *e) {return e->W == 0 && e->D == 0 && e->L  > 0;}
+
+static bool_t
+same_SE_link (selink_t *a, selink_t *b)
+{
+	return 	a->iwin == b->iwin && 
+			a->ilos == b->ilos;
+}
 
 // no globals
 static void
@@ -652,7 +671,7 @@ scan_encounters ( const struct ENC *enc, gamesnum_t n_enc
 	*psel_n = n_b;
 
 	for (e = 1, r = 0 ; e < n_b; e++) {
-		if (sel[e].iwin != sel[r].iwin || sel[e].ilos != sel[r].ilos) {
+		if (!same_SE_link (&sel[r], &sel[e]) ) {
 			r++;
 			if (r != e) sel[r] = sel[e];
 		}
