@@ -804,7 +804,7 @@ groupvar_build (group_var_t *gv, player_t n_plyrs, const char **name, const stru
 	if (supporting_encmem_init (encounters->n, sp, &SElnk)) {
 
 		printf ("%8.3lf | scan_encounters... \n", getcl(CL));
-		scan_encounters(encounters->enc, encounters->n, gv->groupbelong, players->n, sp->SE2, &sp->N_se2, SElnk , &SElnk_n); 
+		scan_encounters (encounters->enc, encounters->n, gv->groupbelong, players->n, sp->SE2, &sp->N_se2, SElnk , &SElnk_n); 
 
 		printf ("%8.3lf | convert_general_init...\n", getcl(CL));
 		convert_general_init (gv, n_plyrs);
