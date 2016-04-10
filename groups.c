@@ -143,14 +143,32 @@ groupset_add (group_var_t *gv, group_t *a)
 	gv->groupbuffer.tail = a;
 }
 
+static void
+groupset_reset_finding (group_var_t *gv)
+{
+	group_t * s;
+	player_t i;
+
+	for (i = 0; i < gv->nplayers; i++) {
+		gv->tofindgroup[i] = NULL;
+	}
+	for (s = groupset_head(gv); s != NULL; s = s->next) {
+		gv->tofindgroup[s->id] = s;
+	}
+}
+
 static group_t * 
 groupset_find (group_var_t *gv, player_t id)
 {
 	group_t * s;
+#if 1
+	return gv->tofindgroup[id];
+#else
 	for (s = groupset_head(gv); s != NULL; s = s->next) {
 		if (id == s->id) return s;
 	}
 	return NULL;
+#endif
 }
 
 //---------------------------------- INITIALIZATION --------------------------
@@ -577,7 +595,7 @@ scan_encounters ( const struct ENC *enc, gamesnum_t n_enc
 	}
 
 //
-	if (NULL == (xx = memnew( (size_t)n_plyrs * sizeof(pnode_t) ))) {
+	if (NULL != (xx = memnew( (size_t)n_plyrs * sizeof(pnode_t) ))) {
 
 		pnode_clear (xx, n_plyrs);
 
@@ -604,7 +622,7 @@ scan_encounters ( const struct ENC *enc, gamesnum_t n_enc
 		memrel(xx);
 
 	} else {
-		fprintf(stderr,"Not enough memory available\n");
+		fprintf(stderr,"Not enough memory available, FILE=%s, LINE=%d\n",__FILE__, __LINE__);
 		exit(EXIT_FAILURE);
 	}
 //
@@ -656,6 +674,8 @@ node_add_group (group_var_t *gv, player_t x)
 		g = group_reset(group_new(gv));	
 		g->id = gv->groupbelong[x];
 		groupset_add(gv,g);
+
+		gv->tofindgroup[gv->groupbelong[x]] = g;
 	}
 	assert (g->id == gv->groupbelong[x]);
 	gv->node[x].group = g;
@@ -772,6 +792,9 @@ groupvar_build (group_var_t *gv, player_t n_plyrs, const char **name, const stru
 
 		// Initiate groups from critical "super" encounters
 		printf ("%8.3lf | multi sup_enc2group... N= %ld, Unique=%ld\n", getcl(CL), sp->N_se2, SElnk_n);
+
+		groupset_reset_finding (gv);
+
 #if 0
 		for (e = 0 ; e < sp->N_se2; e++) {
 			sup_enc2group (&sp->SE2[e], gv);
