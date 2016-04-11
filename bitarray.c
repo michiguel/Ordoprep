@@ -73,6 +73,8 @@ ba_setnot (struct BITARRAY *ba)
 	for (i = 0; i < max_p; i++) ba->pod[i] = ~ba->pod[i];
 }
 
+#include <string.h>
+
 bool_t
 ba_init(struct BITARRAY *ba, player_t max)
 {
@@ -88,7 +90,11 @@ ba_init(struct BITARRAY *ba, player_t max)
 	if (ok) {
 		ba->max = max;
 		ba->pod = ptr;
+#if 0
 		for (i = 0; i < max_p; i++) ba->pod[i] = 0;
+#else
+		memset (ba->pod, 0, sizeof(pod_t) * max_p);
+#endif
 	} 
 	return ok;
 }
