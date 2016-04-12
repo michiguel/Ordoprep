@@ -440,85 +440,44 @@ add_participant (group_var_t *gv, group_t *g, player_t i, const char *name)
 static void
 add_beat_connection (group_var_t *gv, group_t *g, struct NODE *pnode)
 {
+	// Assume scan counters properly sorted and eliminated duplicates
+	// otherwise, duplicates could be added	
+
 	connection_t *nw;
 
-	assert(g);
-	assert(pnode);
-	assert(pnode->group);
+	assert(g && pnode && pnode->group);
 
+	nw = connection_new(gv);
+	nw->next = NULL;
+	nw->node = pnode;
 	if (g->cstart == NULL) {
-		nw = connection_new(gv);
-		nw->next = NULL;
-		nw->node = pnode;
 		g->cstart = nw; 
-		g->clast = nw;	
 	} else {
-		bool_t found = FALSE;
-		connection_t *l;
-
-#if 0
-// Not really necessary if scan counters properly sorted and eliminated duplicates
-		connection_t *c;	
-		player_t group_id = pnode->group->id;
-
-		for (c = g->cstart; !found && c != NULL; c = c->next) {
-			node_t *nd = c->node;
-			found = nd && nd->group && nd->group->id == group_id;
-		}
-#endif
-
-		if (!found) {
-			nw = connection_new(gv);
-			nw->next = NULL;
-			nw->node = pnode;
-			l = g->clast;
-			l->next  = nw;
-			g->clast = nw;
-		}
-
+		g->clast->next  = nw;
 	}		
+	g->clast = nw;
 }
 
 // no globals
 static void
 add_lost_connection (group_var_t *gv, group_t *g, struct NODE *pnode)
 {
+	// Assume scan counters properly sorted and eliminated duplicates
+	// otherwise, duplicates could be added	
+
 	connection_t *nw;
 
-	assert(g);
-	assert(pnode);
-	assert(pnode->group);
+	assert(g && pnode && pnode->group);
 
+	nw = connection_new(gv);
+	nw->next = NULL;
+	nw->node = pnode;
 	if (g->lstart == NULL) {
-		nw = connection_new(gv);
-		nw->next = NULL;
-		nw->node = pnode;
 		g->lstart = nw; 
-		g->llast = nw;	
 	} else {
-		bool_t found = FALSE;
-		connection_t *l;
-
-#if 0
-// Not really necessary if scan counters properly sorted and eliminated duplicates
-		connection_t *c;	
-		player_t group_id = pnode->group->id;;
-
-		for (c = g->lstart; !found && c != NULL; c = c->next) {
-			node_t *nd = c->node;
-			found = nd && nd->group && nd->group->id == group_id;
-		}
-#endif
-
-		if (!found) {
-			nw = connection_new(gv);
-			nw->next = NULL;
-			nw->node = pnode;
-			l = g->llast;
-			l->next  = nw;
-			g->llast = nw;
-		}
+		g->llast->next  = nw;
 	}		
+	g->llast = nw;
 }
 
 //
