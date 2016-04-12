@@ -935,7 +935,7 @@ group_gocombine (group_t *g, group_t *h)
 //-----------------------------------------------
 
 
-static void simplify (group_t *g);
+static void simplify (group_t *g, group_t **cmbbuf);
 
 static group_t *group_next (group_t *g)
 {
@@ -947,15 +947,26 @@ static void
 groupvar_simplify (group_var_t *gv)
 {
 	group_t *g;
+	group_t **cmbbuf;
+	size_t mem = (size_t)gv->nplayers * sizeof (group_t *);
+
+if (NULL != (cmbbuf = memnew (mem))) {
 
 	g = groupset_head(gv);
 	assert(g);
 
 	while(g) {
-		simplify(g);
+		simplify(g,cmbbuf);
 		g = group_next(g);
 	}
 	assert(groupset_sanity_check(gv));
+
+	memrel(cmbbuf);
+} else {
+	fprintf (stderr, "No memory available for group detection\n");
+	exit (EXIT_FAILURE);
+}
+
 	return;
 }
 
@@ -1105,7 +1116,6 @@ simplify_shrink_redundancy (group_t *g)
 	#endif
 }
 
-static group_t *_Cmb[10000000];
 
 static player_t
 find_combine_candidate (group_t *g, group_t *comb[])
@@ -1141,15 +1151,13 @@ find_combine_candidate (group_t *g, group_t *comb[])
 		}
 	}
 
-	//comb[cmb] = NULL;
-
 	ba_done(&bA);
 
 	return cmb;
 }
 
 static void
-simplify (group_t *g)
+simplify (group_t *g, group_t **combbuf)
 {
 	player_t cmb;
 	player_t n;
@@ -1157,11 +1165,11 @@ simplify (group_t *g)
 
 	do {
 		simplify_shrink_redundancy (g);
-		n = find_combine_candidate (g, _Cmb);
+		n = find_combine_candidate (g, combbuf);
 		if (n > 0) {
 			// printf ("comb: %5ld \n", g->id);
 			for (cmb = 0; cmb < n; cmb++) {
-				combine_with = _Cmb[cmb];
+				combine_with = combbuf[cmb];
 				group_gocombine (g, combine_with);
 			}
 		} 
