@@ -78,7 +78,7 @@ static group_t *	group_pointed_by_node (node_t *nd);
 static void			groupvar_assign_newid (group_var_t *gv);
 static void			groupvar_list_sort (group_var_t *gv);
 static void			groupvar_list_output (group_var_t *gv, FILE *f);
-static void			group_output (group_t *s, group_var_t *gv, FILE *f);
+static void			group_output (group_t *s, group_var_t *gv, FILE *f, bool_t showlinks);
 
 // groupset functions
 
@@ -736,6 +736,7 @@ selink2group (player_t iwin, player_t ilos, group_var_t *gv)
 static player_t get_iwin (struct ENC *pe) {return pe->W > 0? pe->wh: pe->bl;}
 static player_t get_ilos (struct ENC *pe) {return pe->W > 0? pe->bl: pe->wh;}
 
+#if 0
 // no globals
 static void
 sup_enc2group (struct ENC *pe, group_var_t *gv)
@@ -751,6 +752,7 @@ sup_enc2group (struct ENC *pe, group_var_t *gv)
 	ilos = get_ilos(pe);
 	selink2group (iwin, ilos, gv);
 }
+#endif
 
 static void
 group_gocombine (group_t *g, group_t *h);
@@ -1361,7 +1363,7 @@ groupvar_list_output (group_var_t *gv, FILE *f)
 		g = gv->groupfinallist[i].group;
 		fprintf (f,"\nGroup %ld\n",(long)gv->getnewid[g->id]);
 		simplify_shrink_redundancy (g);
-		group_output(g,gv,f);
+		group_output (g, gv, f, FALSE);
 	}
 
 	fprintf(f,"\n");
@@ -1576,7 +1578,7 @@ participants_list_print (FILE *f, participant_t *pstart)
 
 
 static void
-group_output (group_t *s, group_var_t *gv, FILE *f)
+group_output (group_t *s, group_var_t *gv, FILE *f, bool_t showlinks)
 {		
 	connection_t *c;
 	player_t own_id;
@@ -1590,7 +1592,8 @@ group_output (group_t *s, group_var_t *gv, FILE *f)
 		group_t *gr = group_pointed_by_conn(c);
 		if (gr != NULL) {
 			if (gr->id != own_id) {
-//				fprintf (f," \\---> there are (only) wins against group: %ld\n",(long)gv->getnewid[gr->id]);
+				if (showlinks)
+					fprintf (f," \\---> there are (only) wins against group: %ld\n",(long)gv->getnewid[gr->id]);
 				winconnections++;
 			}
 		} else
@@ -1600,7 +1603,8 @@ group_output (group_t *s, group_var_t *gv, FILE *f)
 		group_t *gr = group_pointed_by_conn(c);
 		if (gr != NULL) {
 			if (gr->id != own_id) {
-//				fprintf (f," \\---> there are (only) losses against group: %ld\n",(long)gv->getnewid[gr->id]);
+				if (showlinks)
+					fprintf (f," \\---> there are (only) losses against group: %ld\n",(long)gv->getnewid[gr->id]);
 				lossconnections++;
 			}
 		} else
@@ -1608,7 +1612,10 @@ group_output (group_t *s, group_var_t *gv, FILE *f)
 	}
 	if (winconnections == 0 && lossconnections == 0) {
 		fprintf (f," \\---> this group is isolated from the rest\n");
-	} 
+	} else {
+		if (!showlinks)
+			fprintf (f," \\---> this group has incomplete links with the rest (only wins or losses)\n");
+	}
 }
 
 
