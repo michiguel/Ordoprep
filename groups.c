@@ -1665,7 +1665,6 @@ GV_make
 		if (!ok) memrel(gv);
 	}
 
-printf ("GV_make done\n");
 	return ok? gv: NULL;
 }
 
