@@ -1277,6 +1277,11 @@ groupvar_finish (group_var_t *gv)
 			prev_g = g;
 			g = group_next_pointed_by_beat(g);
 
+if (prev_g->lstart == NULL) {
+	gv->groupfinallist[gv->groupfinallist_n++].group = group_unlink(prev_g);
+	startover = TRUE;
+} else {
+
 			if (g != NULL) {
 				own_id = g->id;
 				for (b = group_beat_head(g); b != NULL; b = beat_next(b)) {
@@ -1300,7 +1305,7 @@ groupvar_finish (group_var_t *gv)
 				gv->groupfinallist[gv->groupfinallist_n++].group = group_unlink(prev_g);
 				startover = TRUE;
 			}
-
+}
 		} while (!combined && !startover);
 
 		ba_clear(&bA);			
