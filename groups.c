@@ -1105,10 +1105,10 @@ simplify_shrink_redundancy (group_t *g)
 	#endif
 }
 
-static group_t *Cmb[10000000];
+static group_t *_Cmb[10000000];
 
 static group_t *
-find_combine_candidate (group_t *g)
+find_combine_candidate (group_t *g, group_t *comb[])
 {
 	group_t 		*comb_candidate = NULL;
 	bitarray_t 		bA;
@@ -1138,15 +1138,15 @@ player_t cmb = 0;
 		id = id_pointed_by_conn(c);
 		if (id != NO_ID && ba_ison(&bA, id)) {
 			comb_candidate = group_pointed_by_conn(c);			
-			if (cmb < 1000000) Cmb[cmb++] = comb_candidate;
+			comb[cmb++] = comb_candidate;
 		}
 	}
 
-	Cmb[cmb] = NULL;
+	comb[cmb] = NULL;
 
 	ba_done(&bA);
 
-	return comb_candidate;
+	return cmb > 0? comb[0]: NULL;
 }
 
 static void
@@ -1157,11 +1157,12 @@ player_t cmb;
 	group_t	*combine_with = NULL;
 	do {
 		simplify_shrink_redundancy (g);
-		if (NULL != (combine_with = find_combine_candidate (g))) {
+		combine_with = find_combine_candidate (g, _Cmb);
+		if (NULL != combine_with) {
 //printf ("comb: %5ld %5ld\n", g->id, combine_with->id);
 
-for (cmb = 0; Cmb[cmb] != NULL; cmb++) {
-			combine_with = Cmb[cmb];
+for (cmb = 0; _Cmb[cmb] != NULL; cmb++) {
+			combine_with = _Cmb[cmb];
 			group_gocombine (g, combine_with);
 }
 		} 
