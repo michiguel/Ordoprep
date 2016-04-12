@@ -793,6 +793,7 @@ groupvar_build (group_var_t *gv, player_t n_plyrs, const char **name, const stru
 	selink_t *SElnk;
 	gamesnum_t SElnk_n;
 
+	player_t ret;
 	player_t i;
 	gamesnum_t e;
 	super_t SP;
@@ -859,7 +860,10 @@ groupvar_build (group_var_t *gv, player_t n_plyrs, const char **name, const stru
 	groupvar_assign_newid (gv);
 
 	printf ("%8.3lf | counter... \n", getcl(CL));
-	return groupvar_counter(gv) ;
+	ret = groupvar_counter(gv) ;
+
+	printf ("%8.3lf | done. \n", getcl(CL));
+	return ret;
 }
 
 
@@ -1101,6 +1105,8 @@ simplify_shrink_redundancy (group_t *g)
 	#endif
 }
 
+static group_t *Cmb[10000000];
+
 static group_t *
 find_combine_candidate (group_t *g)
 {
@@ -1109,6 +1115,8 @@ find_combine_candidate (group_t *g)
 	connection_t 	*c;
 	player_t		id;
 	player_t		max_player;
+
+player_t cmb = 0;
 
 	assert(g);
 
@@ -1130,9 +1138,11 @@ find_combine_candidate (group_t *g)
 		id = id_pointed_by_conn(c);
 		if (id != NO_ID && ba_ison(&bA, id)) {
 			comb_candidate = group_pointed_by_conn(c);			
-			break;
+			if (cmb < 1000000) Cmb[cmb++] = comb_candidate;
 		}
 	}
+
+	Cmb[cmb] = NULL;
 
 	ba_done(&bA);
 
@@ -1142,11 +1152,18 @@ find_combine_candidate (group_t *g)
 static void
 simplify (group_t *g)
 {
+player_t cmb;
+
 	group_t	*combine_with = NULL;
 	do {
 		simplify_shrink_redundancy (g);
 		if (NULL != (combine_with = find_combine_candidate (g))) {
+//printf ("comb: %5ld %5ld\n", g->id, combine_with->id);
+
+for (cmb = 0; Cmb[cmb] != NULL; cmb++) {
+			combine_with = Cmb[cmb];
 			group_gocombine (g, combine_with);
+}
 		} 
 	} while (combine_with);
 	simplify_shrink_redundancy (g);
@@ -1639,6 +1656,8 @@ GV_make
 		}
 		if (!ok) memrel(gv);
 	}
+
+printf ("GV_make done\n");
 	return ok? gv: NULL;
 }
 

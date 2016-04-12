@@ -448,6 +448,7 @@ main2	( strlist_t *psl
 		if (encounters_init (Games.n, &Encounters)) {
 			encounters_calculate (ENCOUNTERS_FULL, &Games, Players.flagged, &Encounters);
 			if (NULL != (gv = GV_make (&Encounters, &Players))) {
+printf("GV_sieve...\n");
 				GV_sieve (gv, &Encounters, &intra, &inter);
 			} else {
 				fprintf (stderr, "not enough memory for encounters allocation\n");
@@ -456,6 +457,8 @@ main2	( strlist_t *psl
 			encounters_done (&Encounters);
 		}
 	}
+
+printf("GV_sieve done.\n");
 
 	if (groupstr != NULL) {
 		FILE *groupf = NULL;

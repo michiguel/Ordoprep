@@ -80,7 +80,7 @@ ba_init(struct BITARRAY *ba, player_t max)
 {
 	bool_t ok;
 	uint64_t *ptr;
-	size_t i;
+//	size_t i;
 	size_t max_p = (size_t)max/64 + (max % 64 > 0?1:0);
 
 	assert(ba);
