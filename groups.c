@@ -160,10 +160,10 @@ groupset_reset_finding (group_var_t *gv)
 static group_t * 
 groupset_find (group_var_t *gv, player_t id)
 {
-	group_t * s;
 #if 1
 	return gv->tofindgroup[id];
 #else
+	group_t * s;
 	for (s = groupset_head(gv); s != NULL; s = s->next) {
 		if (id == s->id) return s;
 	}
@@ -440,14 +440,11 @@ add_participant (group_var_t *gv, group_t *g, player_t i, const char *name)
 static void
 add_beat_connection (group_var_t *gv, group_t *g, struct NODE *pnode)
 {
-	player_t group_id;
 	connection_t *nw;
 
 	assert(g);
 	assert(pnode);
 	assert(pnode->group);
-
-	group_id = pnode->group->id;
 
 	if (g->cstart == NULL) {
 		nw = connection_new(gv);
@@ -456,10 +453,13 @@ add_beat_connection (group_var_t *gv, group_t *g, struct NODE *pnode)
 		g->cstart = nw; 
 		g->clast = nw;	
 	} else {
-		connection_t *l, *c;
 		bool_t found = FALSE;
+		connection_t *l;
+
 /*
 // Not really necessary if scan counters properly sorted and eliminated duplicates
+		connection_t *c;	
+		player_t group_id = pnode->group->id;
 
 		for (c = g->cstart; !found && c != NULL; c = c->next) {
 			node_t *nd = c->node;
@@ -1107,7 +1107,7 @@ simplify_shrink_redundancy (group_t *g)
 
 static group_t *_Cmb[10000000];
 
-static group_t *
+static player_t
 find_combine_candidate (group_t *g, group_t *comb[])
 {
 	group_t 		*comb_candidate = NULL;
@@ -1115,8 +1115,7 @@ find_combine_candidate (group_t *g, group_t *comb[])
 	connection_t 	*c;
 	player_t		id;
 	player_t		max_player;
-
-player_t cmb = 0;
+	player_t 		cmb = 0;
 
 	assert(g);
 
@@ -1142,31 +1141,31 @@ player_t cmb = 0;
 		}
 	}
 
-	comb[cmb] = NULL;
+	//comb[cmb] = NULL;
 
 	ba_done(&bA);
 
-	return cmb > 0? comb[0]: NULL;
+	return cmb;
 }
 
 static void
 simplify (group_t *g)
 {
-player_t cmb;
-
+	player_t cmb;
+	player_t n;
 	group_t	*combine_with = NULL;
+
 	do {
 		simplify_shrink_redundancy (g);
-		combine_with = find_combine_candidate (g, _Cmb);
-		if (NULL != combine_with) {
-//printf ("comb: %5ld %5ld\n", g->id, combine_with->id);
-
-for (cmb = 0; _Cmb[cmb] != NULL; cmb++) {
-			combine_with = _Cmb[cmb];
-			group_gocombine (g, combine_with);
-}
+		n = find_combine_candidate (g, _Cmb);
+		if (n > 0) {
+			// printf ("comb: %5ld \n", g->id);
+			for (cmb = 0; cmb < n; cmb++) {
+				combine_with = _Cmb[cmb];
+				group_gocombine (g, combine_with);
+			}
 		} 
-	} while (combine_with);
+	} while (n);
 	simplify_shrink_redundancy (g);
 	return;
 }
