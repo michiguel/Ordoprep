@@ -1277,12 +1277,11 @@ groupvar_finish (group_var_t *gv)
 			prev_g = g;
 			g = group_next_pointed_by_beat(g);
 
-if (prev_g->lstart == NULL) {
-	gv->groupfinallist[gv->groupfinallist_n++].group = group_unlink(prev_g);
-	startover = TRUE;
-} else {
-
-			if (g != NULL) {
+			if (prev_g->lstart == NULL || g == NULL) { // no losses or no victories, quit now to optimize
+				gv->groupfinallist[gv->groupfinallist_n++].group = group_unlink(prev_g);
+				startover = TRUE;
+			} else {
+				assert (g != NULL);
 				own_id = g->id;
 				for (b = group_beat_head(g); b != NULL; b = beat_next(b)) {
 					gp = group_pointed_by_conn(b);
@@ -1300,12 +1299,8 @@ if (prev_g->lstart == NULL) {
 						break;
 					}
 				}
-
-			} else {
-				gv->groupfinallist[gv->groupfinallist_n++].group = group_unlink(prev_g);
-				startover = TRUE;
 			}
-}
+
 		} while (!combined && !startover);
 
 		ba_clear(&bA);			
