@@ -784,7 +784,7 @@ groupvar_build (group_var_t *gv, player_t n_plyrs, const char **name, const stru
 		convert_general_init (gv, n_plyrs);
 
 		// Initiate groups from critical "super" encounters
-		printf ("%8.2lf | incorporate links into groups... N=%ld, Unique=%ld\n", timer_get(), sp->N_se2, SElnk_n);
+		printf ("%8.2lf | incorporate links into groups... N=%ld, Unique=%ld\n", timer_get(), (long)sp->N_se2, (long)SElnk_n);
 
 		groupset_reset_finding (gv);
 
