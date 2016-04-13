@@ -353,6 +353,7 @@ main2	( strlist_t *psl
 	struct ENCOUNTERS Encounters;
 	gamesnum_t intra = 0;
 	gamesnum_t inter = 0;
+	gamesnum_t total_encounters = 0;
 
 	/*==== set input ====*/
 
@@ -444,30 +445,34 @@ main2	( strlist_t *psl
 				group_players_str != NULL || 
 				flag->only_major;
 
+
 	if (do_groups) {
+		timer_reset();
+		printf ("Processing groups... \n");
+		printf ("%8.2lf | Compact games info to matches... \n", timer_get());
 		if (encounters_init (Games.n, &Encounters)) {
 			encounters_calculate (ENCOUNTERS_FULL, &Games, Players.flagged, &Encounters);
 			if (NULL != (gv = GV_make (&Encounters, &Players))) {
-printf("GV_sieve...\n");
+				printf ("%8.2lf | sieve groups... \n", timer_get());
 				GV_sieve (gv, &Encounters, &intra, &inter);
+				total_encounters = Encounters.n;
 			} else {
 				fprintf (stderr, "not enough memory for encounters allocation\n");
 				exit(EXIT_FAILURE);
 			}
 			encounters_done (&Encounters);
 		}
+		printf ("%8.2lf | done. \n", timer_get());
 	}
-
-printf("GV_sieve done.\n");
 
 	if (groupstr != NULL) {
 		FILE *groupf = NULL;
 		if (NULL != (groupf = fopen (groupstr, "w"))) {
 			GV_out (gv, groupf);
 			if (!quietmode) {
-				printf ("Groups=%ld\n", (long)GV_counter(gv));
+				printf ("\nGroups=%ld\n", (long)GV_counter(gv));
 				printf ("Encounters: Total=%ld, within groups=%ld, @ interface between groups=%ld\n"
-						, (long)Encounters.n, (long)intra, (long)inter);
+						, (long)total_encounters, (long)intra, (long)inter);
 			}
 			fclose(groupf);
 		} else {

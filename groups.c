@@ -746,9 +746,16 @@ groupvar_counter (group_var_t *gv)
 
 #include <time.h>
 
-static double getcl(clock_t start)
+static clock_t Standard_clock = 0;
+
+void timer_reset(void)
 {
-	return ( (double)clock()-(double)start)/(double)CLOCKS_PER_SEC;
+	Standard_clock = clock();
+}
+
+double timer_get(void)
+{
+	return ( (double)clock()-(double)Standard_clock)/(double)CLOCKS_PER_SEC;
 }
 
 static void
@@ -766,19 +773,18 @@ groupvar_build (group_var_t *gv, player_t n_plyrs, const char **name, const stru
 	super_t SP;
 	super_t *sp = &SP;
 
-	clock_t CL = clock();
-	printf ("%8.3lf | init... \n", getcl(CL));
+	printf ("%8.2lf | memory initialization... \n", timer_get());
 
 	if (supporting_encmem_init (encounters->n, sp, &SElnk)) {
 
-		printf ("%8.3lf | scan_encounters... \n", getcl(CL));
+		printf ("%8.2lf | scan games... \n", timer_get());
 		scan_encounters (encounters->enc, encounters->n, gv->groupbelong, players->n, sp->SE2, &sp->N_se2, SElnk , &SElnk_n); 
 
-		printf ("%8.3lf | convert_general_init...\n", getcl(CL));
+		printf ("%8.2lf | general initialization...\n", timer_get());
 		convert_general_init (gv, n_plyrs);
 
 		// Initiate groups from critical "super" encounters
-		printf ("%8.3lf | multi sup_enc2group... N= %ld, Unique=%ld\n", getcl(CL), sp->N_se2, SElnk_n);
+		printf ("%8.2lf | incorporate links into groups... N=%ld, Unique=%ld\n", timer_get(), sp->N_se2, SElnk_n);
 
 		groupset_reset_finding (gv);
 
@@ -793,7 +799,7 @@ groupvar_build (group_var_t *gv, player_t n_plyrs, const char **name, const stru
 		exit(EXIT_FAILURE);
 	}
 
-	printf ("%8.3lf | Initiate groups for each player with no SE...\n", getcl(CL));
+	printf ("%8.2lf | start groups for each player with no links...\n", timer_get());
 
 	// Initiate groups for each player present in the database that did not have 
 	// critical super encounters
@@ -802,7 +808,7 @@ groupvar_build (group_var_t *gv, player_t n_plyrs, const char **name, const stru
 			node_add_group (gv,i);
 	}
 
-	printf ("%8.3lf | Add respective list of participants... \n", getcl(CL));
+	printf ("%8.2lf | add list of participants... \n", timer_get());
 	// for all the previous added groups, add respective list of participants
 	for (i = 0; i < n_plyrs; i++) {
 		if (node_is_occupied(gv,i)) {
@@ -813,23 +819,21 @@ groupvar_build (group_var_t *gv, player_t n_plyrs, const char **name, const stru
 
 	assert(groupset_sanity_check_nocombines(gv));
 
-	printf ("%8.3lf | groupvar_simplify... \n", getcl(CL));
+	printf ("%8.2lf | group joining and simplification... \n", timer_get());
 	groupvar_simplify(gv);
 
-	printf ("%8.3lf | finish... \n", getcl(CL));
+	printf ("%8.2lf | finish complex circuits... \n", timer_get());
 	groupvar_finish(gv);
 
-	printf ("%8.3lf | sort... \n", getcl(CL));
+	printf ("%8.2lf | sort... \n", timer_get());
 	groupvar_list_sort (gv);
 	groupvar_finallist_sort(gv);
 
-	printf ("%8.3lf | assign_newid... \n", getcl(CL));
+	printf ("%8.2lf | assign new indexes... \n", timer_get());
 	groupvar_assign_newid (gv);
 
-	printf ("%8.3lf | counter... \n", getcl(CL));
 	ret = groupvar_counter(gv) ;
 
-	printf ("%8.3lf | done. \n", getcl(CL));
 	return ret;
 }
 
