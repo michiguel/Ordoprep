@@ -28,6 +28,8 @@
 #include "mymem.h"
 #include "bitarray.h"
 
+#include "mytimer.h"
+
 #define NO_ID -1
 
 static bool_t	group_buffer_init (struct GROUP_BUFFER *g, player_t n);
@@ -744,19 +746,6 @@ groupvar_counter (group_var_t *gv)
 	return gv->groupfinallist_n;
 }
 
-#include <time.h>
-
-static clock_t Standard_clock = 0;
-
-void timer_reset(void)
-{
-	Standard_clock = clock();
-}
-
-double timer_get(void)
-{
-	return ( (double)clock()-(double)Standard_clock)/(double)CLOCKS_PER_SEC;
-}
 
 static void
 groupvar_finallist_sort(group_var_t *gv);
