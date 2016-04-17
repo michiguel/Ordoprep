@@ -186,41 +186,7 @@ discard_percmin (bool_t quiet, double p, struct PLAYERS *pl, struct GAMES *gm)
 	return found;
 }
 
-#if 0
-static bool_t
-discard_playedmin (bool_t quiet, double p, struct PLAYERS *pl, struct GAMES *gm)
-{
-	player_t j;
-	gamesnum_t i;
 
-	long excluded = 0;
-	bool_t found  = FALSE;
-
-	player_t np = pl->n;
-	gamesnum_t ng = gm->n;
-	const char  **name = pl->name;
-	struct gamei *ga = gm->ga;
-
-	for (j = 0; j < np; j++) {
-		if (Perfmax[j] == 0) continue;
-
-		found = Perfmax[j] < (2*p); //Perfmax wins count double
-
-		if (found ) {
-			excluded++;
-			if (!quiet)	printf ("  %s\n",name[j]);
-			for (i = 0; i < ng; i++) {
-				if (ga[i].score >= DISCARD) continue;
-				if (ga[i].whiteplayer == j || ga[i].blackplayer == j) {
-					ga[i].score |= IGNORED;
-				}
-			}
-		}
-	}
-	printf ("\nExcluded: %ld\n", excluded);
-	return found;
-}
-#else
 static bool_t
 discard_playedmin (bool_t quiet, double p, struct PLAYERS *pl, struct GAMES *gm)
 {
@@ -267,7 +233,6 @@ discard_playedmin (bool_t quiet, double p, struct PLAYERS *pl, struct GAMES *gm)
 	return found;
 }
 
-#endif
 
 static void	
 save2pgnf(struct GAMES *gm, struct PLAYERS *pl, FILE *f)

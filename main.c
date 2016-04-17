@@ -145,6 +145,18 @@ struct helpline SH[] = {
 static bool_t strlist_multipush (strlist_t *sl, const char *finp_name);
 
 
+static bool_t compatible_discards(struct FLAGS flag, const char *group_str)
+{
+	int count = 0;
+	if (flag.discard_mode) count++; 
+	if (flag.min_percentage_use) count++; 	
+	if (flag.min_gamesplayed_use) count++;
+	if (flag.only_major) count++;
+	if (group_str) count++;
+	return count < 2;
+}
+
+
 int main (int argc, char *argv[])
 {
 	struct FLAGS flag;
@@ -323,6 +335,11 @@ int main (int argc, char *argv[])
 		fprintf (stderr, "Switches -x and -i cannot be used at the same time\n\n");
 		exit(EXIT_FAILURE);
 	}	
+
+	if (!compatible_discards(flag, groupstr)) {
+		fprintf (stderr, "Switches --major-only, -g, -d, -m, and -M cannot be used at the same time\n\n");
+		exit(EXIT_FAILURE);
+	}
 
 	strlist_init(psl);
 
