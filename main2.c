@@ -29,8 +29,15 @@
 #include "inidone.h"
 #include "mymem.h"
 #include "plyrs.h"
-
 #include "strlist.h"
+#include "mytimer.h"
+
+//-- Globals -------------------------------
+
+static long	*Perf   ;
+static long	*Perfmax;
+
+//-----------------------------------------
 
 void
 flags_reset(struct FLAGS *f)
@@ -46,9 +53,6 @@ flags_reset(struct FLAGS *f)
 	f->groups_max = 1000;
 }
 
-static long	*perf   ;
-static long	*perfmax;
-
 static void
 calc_perf (struct PLAYERS *pl, struct GAMES *gm)
 {
@@ -61,8 +65,8 @@ calc_perf (struct PLAYERS *pl, struct GAMES *gm)
 	player_t j, w, b;
 
 	for (j = 0; j < np; j++) {
-		perf[j] = 0;	
-		perfmax[j] = 0;
+		Perf[j] = 0;	
+		Perfmax[j] = 0;
 	}	
 
 	for (i = 0; i < ng; i++) {
@@ -74,52 +78,65 @@ calc_perf (struct PLAYERS *pl, struct GAMES *gm)
 		s = ga[i].score;		
 
 		if (s == WHITE_WIN) {
-			perf[w] += 2;
+			Perf[w] += 2;
 		}
 		if (s == BLACK_WIN) {
-			perf[b] += 2;
+			Perf[b] += 2;
 		}
 		if (s == RESULT_DRAW) {
-			perf[w] += 1;
-			perf[b] += 1;
+			Perf[w] += 1;
+			Perf[b] += 1;
 		}
 
-		perfmax[w] += 2;
-		perfmax[b] += 2;
+		Perfmax[w] += 2;
+		Perfmax[b] += 2;
 	}
 }
+
 
 static bool_t
 discard (bool_t quiet, struct PLAYERS *pl, struct GAMES *gm)
 {
 	player_t j;
 	gamesnum_t i;
-
 	long excluded = 0;
 	bool_t found  = FALSE;
+	bitarray_t array_ticked;
+	bitarray_t *ticked = &array_ticked;
 
+	player_t np = pl->n;
 	gamesnum_t ng = gm->n;
 	const char  **name = pl->name;
 	struct gamei *ga = gm->ga;
 
-	for (j = 0; j < pl->n; j++) {
-		if (perfmax[j] == 0) continue;
+	if (ba_init (ticked, np)) {
 
-		found = perf[j] == perfmax[j] || perf[j] == 0;
+		ba_clear(ticked);
 
-		if (found ) {
-			excluded++;
-			if (!quiet)	printf ("  %s\n",name[j]);
-			for (i = 0; i < ng; i++) {
-				if (ga[i].score >= DISCARD) continue;
-				if (ga[i].whiteplayer == j || ga[i].blackplayer == j) {
-					ga[i].score |= IGNORED;
-				}
+		for (j = 0; j < np; j++) {
+			if (Perfmax[j] == 0) continue;
+			found = Perf[j] == Perfmax[j] || Perf[j] == 0; // <--- criteria to discard
+			if (found) {
+				ba_put (ticked, j);
+				excluded++;
+				if (!quiet)	printf ("  %s\n",name[j]);
 			}
 		}
+
+		for (i = 0; i < ng; i++) {
+			found = ba_ison(ticked, ga[i].whiteplayer) || ba_ison (ticked, ga[i].blackplayer);
+			if (found) {
+				ga[i].score |= IGNORED;
+			}
+		}
+
+		ba_done (ticked);
+	} else {
+		fprintf(stderr, "Not enough memory to store intermediate data for discarding players.\n");
+		exit(EXIT_FAILURE);
 	}
-	if (!quiet)
-		printf ("\nExcluded: %ld\n", excluded);
+
+	if (!quiet) printf ("\nExcluded: %ld\n", excluded);
 	return found;
 }
 
@@ -128,36 +145,48 @@ discard_percmin (bool_t quiet, double p, struct PLAYERS *pl, struct GAMES *gm)
 {
 	player_t j;
 	gamesnum_t i;
-
 	long excluded = 0;
 	bool_t found  = FALSE;
+	bitarray_t array_ticked;
+	bitarray_t *ticked = &array_ticked;
 
 	player_t np = pl->n;
 	gamesnum_t ng = gm->n;
 	const char  **name = pl->name;
 	struct gamei *ga = gm->ga;
 
+	if (ba_init (ticked, np)) {
 
-	for (j = 0; j < np; j++) {
-		if (perfmax[j] == 0) continue;
+		ba_clear(ticked);
 
-		found = ((double)perf[j]/(double)perfmax[j]) < p;
-
-		if (found ) {
-			excluded++;
-			if (!quiet)	printf ("  %s\n",name[j]);
-			for (i = 0; i < ng; i++) {
-				if (ga[i].score >= DISCARD) continue;
-				if (ga[i].whiteplayer == j || ga[i].blackplayer == j) {
-					ga[i].score |= IGNORED;
-				}
+		for (j = 0; j < np; j++) {
+			if (Perfmax[j] == 0) continue;
+			found = ((double)Perf[j]/(double)Perfmax[j]) < p; // <--- criteria to discard
+			if (found) {
+				ba_put (ticked, j);
+				excluded++;
+				if (!quiet)	printf ("  %s\n",name[j]);
 			}
 		}
+
+		for (i = 0; i < ng; i++) {
+			found = ba_ison(ticked, ga[i].whiteplayer) || ba_ison (ticked, ga[i].blackplayer);
+			if (found) {
+				ga[i].score |= IGNORED;
+			}
+		}
+
+		ba_done (ticked);
+	} else {
+		fprintf(stderr, "Not enough memory to store intermediate data for discarding players.\n");
+		exit(EXIT_FAILURE);
 	}
-	printf ("\nExcluded: %ld\n", excluded);
+
+	if (!quiet) printf ("\nExcluded: %ld\n", excluded);
 	return found;
 }
 
+#if 0
 static bool_t
 discard_playedmin (bool_t quiet, double p, struct PLAYERS *pl, struct GAMES *gm)
 {
@@ -173,9 +202,9 @@ discard_playedmin (bool_t quiet, double p, struct PLAYERS *pl, struct GAMES *gm)
 	struct gamei *ga = gm->ga;
 
 	for (j = 0; j < np; j++) {
-		if (perfmax[j] == 0) continue;
+		if (Perfmax[j] == 0) continue;
 
-		found = perfmax[j] < (2*p); //perfmax wins count double
+		found = Perfmax[j] < (2*p); //Perfmax wins count double
 
 		if (found ) {
 			excluded++;
@@ -191,6 +220,54 @@ discard_playedmin (bool_t quiet, double p, struct PLAYERS *pl, struct GAMES *gm)
 	printf ("\nExcluded: %ld\n", excluded);
 	return found;
 }
+#else
+static bool_t
+discard_playedmin (bool_t quiet, double p, struct PLAYERS *pl, struct GAMES *gm)
+{
+	player_t j;
+	gamesnum_t i;
+	long excluded = 0;
+	bool_t found  = FALSE;
+	bitarray_t array_ticked;
+	bitarray_t *ticked = &array_ticked;
+
+	player_t np = pl->n;
+	gamesnum_t ng = gm->n;
+	const char  **name = pl->name;
+	struct gamei *ga = gm->ga;
+
+	if (ba_init (ticked, np)) {
+
+		ba_clear(ticked);
+
+		for (j = 0; j < np; j++) {
+			if (Perfmax[j] == 0) continue;
+			found = Perfmax[j] < (2*p); //Perfmax wins count double // <--- criteria to discard
+			if (found) {
+				ba_put (ticked, j);
+				excluded++;
+				if (!quiet)	printf ("  %s\n",name[j]);
+			}
+		}
+
+		for (i = 0; i < ng; i++) {
+			found = ba_ison(ticked, ga[i].whiteplayer) || ba_ison (ticked, ga[i].blackplayer);
+			if (found) {
+				ga[i].score |= IGNORED;
+			}
+		}
+
+		ba_done (ticked);
+	} else {
+		fprintf(stderr, "Not enough memory to store intermediate data for discarding players.\n");
+		exit(EXIT_FAILURE);
+	}
+
+	if (!quiet) printf ("\nExcluded: %ld\n", excluded);
+	return found;
+}
+
+#endif
 
 static void	
 save2pgnf(struct GAMES *gm, struct PLAYERS *pl, FILE *f)
@@ -412,13 +489,13 @@ main2	( strlist_t *psl
 			games_done (&Games);
 			fprintf (stderr, "Could not initialize Players memory\n"); exit(EXIT_FAILURE);
 		} else 
-		if (NULL == (perf    = memnew(sizeof(long)*(size_t)mpp))) {
+		if (NULL == (Perf    = memnew(sizeof(long)*(size_t)mpp))) {
 			players_done(&Players);
 			games_done (&Games);
 			fprintf (stderr, "Could not initialize memory for performance calculation\n"); exit(EXIT_FAILURE);
 		} else 
-		if (NULL == (perfmax = memnew(sizeof(long)*(size_t)mpp))) {
-			memrel(perf);
+		if (NULL == (Perfmax = memnew(sizeof(long)*(size_t)mpp))) {
+			memrel(Perf);
 			players_done(&Players);
 			games_done (&Games);
 			fprintf (stderr, "Could not initialize memory for max performance calculation\n"); exit(EXIT_FAILURE);
