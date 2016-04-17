@@ -1671,4 +1671,40 @@ GV_groupid (group_var_t *gv, player_t *groupid_out)
 	groupvar_to_groupid(gv, groupid_out);
 }
 
+static player_t
+participants_list_actives (participant_t *pstart, const struct PLAYERS *players)
+{
+	participant_t *p;
+	player_t j;
+	player_t accum; 
+
+	for (p = pstart, accum = 0; p != NULL; p = p->next) {
+		j = p->id;
+		accum += players->present_in_games[j]? (player_t)1: (player_t)0;
+	}
+	return accum;
+}
+
+static player_t
+group_number_of_actives (group_t *s, const struct PLAYERS *players)
+{		
+	return	participants_list_actives (s->pstart, players);
+}
+
+player_t
+GV_non_empty_groups_pop (group_var_t *gv, const struct PLAYERS *players)
+{
+	group_t *g;
+	player_t i;
+	player_t x;
+	player_t counter = 0;
+
+	for (i = 0; i < gv->groupfinallist_n; i++) {
+		g = gv->groupfinallist[i].group;
+		simplify_shrink_redundancy (g);
+		x = group_number_of_actives (g, players);
+		if (x > 0) counter++;
+	}
+	return counter;
+}
 

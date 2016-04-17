@@ -123,6 +123,8 @@ extern void				GV_sieve (group_var_t *gv, const struct ENCOUNTERS *encounters, g
 extern player_t			GV_counter (group_var_t *gv);
 extern void				GV_groupid (group_var_t *gv, player_t *groupid_out);
 
+extern player_t 		GV_non_empty_groups_pop (group_var_t *gv, const struct PLAYERS *players);
+
 extern void 			timer_reset(void);
 extern double 			timer_get(void);
 
