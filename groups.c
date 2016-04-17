@@ -1708,3 +1708,18 @@ GV_non_empty_groups_pop (group_var_t *gv, const struct PLAYERS *players)
 	return counter;
 }
 
+bool_t
+well_connected (const struct ENCOUNTERS *pEncounters, const struct PLAYERS *pPlayers)
+{
+	bool_t ok = FALSE;
+	group_var_t *gv;
+
+	if (NULL != (gv = GV_make (pEncounters, pPlayers))) {
+		ok = GV_counter(gv) == 1 && GV_non_empty_groups_pop (gv, pPlayers) == 1;
+		GV_kill(gv);
+	} else {
+		fprintf (stderr, "not enough memory for encounters allocation\n");
+		exit(EXIT_FAILURE);
+	}
+	return ok;
+}

@@ -125,6 +125,8 @@ extern void				GV_groupid (group_var_t *gv, player_t *groupid_out);
 
 extern player_t 		GV_non_empty_groups_pop (group_var_t *gv, const struct PLAYERS *players);
 
+extern bool_t			well_connected (const struct ENCOUNTERS *pEncounters, const struct PLAYERS *pPlayers);
+
 extern void 			timer_reset(void);
 extern double 			timer_get(void);
 
