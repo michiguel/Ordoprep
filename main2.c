@@ -355,7 +355,12 @@ main2	( strlist_t *psl
 	gamesnum_t inter = 0;
 	gamesnum_t total_encounters = 0;
 
+	timer_reset();
+	timelog("start");
+
 	/*==== set input ====*/
+
+	timelog("input...");
 
 	if (NULL != (pdaba = database_init_frompgn(flag->std_input?stdin:NULL, psl, synstr, quietmode))) {
 		if (0 == pdaba->n_players || 0 == pdaba->n_games) {
@@ -394,6 +399,8 @@ main2	( strlist_t *psl
 	}
 
 	/*==== memory initialization ====*/
+
+	timelog("memory initialization");
 	{
 		player_t mpp 	= pdaba->n_players; 
 		gamesnum_t mg  	= pdaba->n_games;
@@ -427,6 +434,7 @@ main2	( strlist_t *psl
 
 	// info output
 	if (!quietmode) {
+		printf ("\n");
 		printf ("Total games         %8ld\n", (long)Game_stats.white_wins
 											 +(long)Game_stats.draws
 											 +(long)Game_stats.black_wins
@@ -447,13 +455,12 @@ main2	( strlist_t *psl
 
 
 	if (do_groups) {
-		timer_reset();
-		printf ("Processing groups... \n");
-		printf ("%8.2lf | Compact games info to matches... \n", timer_get());
+		if (!quietmode) printf ("Processing groups...\n\n");
+		timelog("compact games info to matches...");
 		if (encounters_init (Games.n, &Encounters)) {
 			encounters_calculate (ENCOUNTERS_FULL, &Games, Players.flagged, &Encounters);
 			if (NULL != (gv = GV_make (&Encounters, &Players))) {
-				printf ("%8.2lf | sieve groups... \n", timer_get());
+				timelog("sieve groups...");
 				GV_sieve (gv, &Encounters, &intra, &inter);
 				total_encounters = Encounters.n;
 			} else {
@@ -462,7 +469,7 @@ main2	( strlist_t *psl
 			}
 			encounters_done (&Encounters);
 		}
-		printf ("%8.2lf | done. \n", timer_get());
+		timelog("done with groups.");
 	}
 
 	if (groupstr != NULL) {
@@ -577,7 +584,11 @@ main2	( strlist_t *psl
 
 	/*==== CALCULATIONS ====*/
 
+	timelog("calculate performaces...");
+
 	calc_perf(&Players, &Games);
+
+	timelog("discard games...");
 
 	if (min_perce) {
 		if (!quietmode) printf ("Exclude based on minimum percentage performance = %.2f%s\n",Min_percentage,"%");	
@@ -593,6 +604,8 @@ main2	( strlist_t *psl
 			calc_perf(&Players, &Games);
 		} while (discard(quietmode, &Players, &Games));
 	}
+
+	timelog("output...");
 
 	//---- OUTPUT, major or all? ------------------------------------------------
 	if (flag->only_major) {
@@ -624,6 +637,8 @@ main2	( strlist_t *psl
 	if (do_groups && NULL != gv) {
 		gv = GV_kill(gv);
 	}
+
+	timelog("DONE!!");
 
 	return EXIT_SUCCESS;
 }

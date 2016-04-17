@@ -30,6 +30,7 @@
 #include "justify.h"
 #include "myhelp.h"
 #include "myopt.h"
+#include "mytimer.h"
 
 /*
 |
@@ -108,6 +109,7 @@ struct helpline SH[] = {
 {'L',	"license",			no_argument,		NULL,	0,	"display license information"},
 {'q',	"quiet",			no_argument,		NULL,	0,	"quiet (no screen progress updates)"},
 {'\0',	"silent",			no_argument,		NULL,	0,	"same as --quiet"},
+{'\0',	"timelog",			no_argument,		NULL,	0,	"outputs elapsed time after each step"},
 {'d',	"no-perfects",		no_argument,		NULL,	0,	"discard players with no wins or no losses"},
 {'m',	"min-perf",			required_argument,	"NUM",	0,	"discard players with a % performance lower than <NUM>"},
 {'M',	"min-games",		required_argument,	"NUM",	0,	"discard players with less than <NUM> games played"},
@@ -180,6 +182,9 @@ int main (int argc, char *argv[])
 	group_games_str = NULL;
 	group_players_str = NULL;
 
+	// default global
+	TIMELOG = FALSE;
+
 	/* reset flags */
 	flags_reset(&flag);
 
@@ -196,6 +201,9 @@ int main (int argc, char *argv[])
 			case '\0':
 						if (!strcmp(long_options[longoidx].name, "silent")) {
 							flag.quietmode = TRUE;
+						} else
+						if (!strcmp(long_options[longoidx].name, "timelog")) {
+							TIMELOG = TRUE;
 						} else
 						if (!strcmp(long_options[longoidx].name, "stdin")) {
 							flag.std_input = TRUE;
