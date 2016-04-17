@@ -72,6 +72,10 @@ In certain situations, the user may want to include/discard only a subset of the
 #### Remaining games
 with the switch `--remaining <file>`, ordoprep will save all the games that were not included in the output
 
+#### Groups
+With the switch `-g <FILE>`, ordoprep will analyze how many groups are properly connected to have a reliable rating. The output will be in `<FILE>`.
+If the user wishes to collect all the games that belong to the major group, then the switch `--major-only` could be used. The output to the file provided with the switch `-o` will contain games played only by participants included in that group. The switch `--group-games=FILE` will divide all games into their respective groups.
+
 #### Help
 Other switches are available and information about them can be obtained by typing
 
@@ -91,6 +95,7 @@ usage: ordoprep [-OPTION]
  -L, --license            display license information
  -q, --quiet              quiet (no screen progress updates)
      --silent             same as --quiet
+     --timelog            outputs elapsed time after each step
  -d, --no-perfects        discard players with no wins or no losses
  -m, --min-perf=NUM       discard players with a % performance lower than <NUM>
  -M, --min-games=NUM      discard players with less than <NUM> games played
