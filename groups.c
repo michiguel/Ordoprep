@@ -185,8 +185,8 @@ struct SELINK {
 static bool_t
 supporting_encmem_init (gamesnum_t nenc, super_t *sp, selink_t **pse)
 {
-	struct ENC *a;
-	selink_t *b;
+	struct ENC 	*a;
+	selink_t 	*b;
 
 	if (NULL == (a = memnew (sizeof(struct ENC) * (size_t)nenc))) {
 		return FALSE;
@@ -218,11 +218,11 @@ groupvar_init (group_var_t *gv, player_t nplayers, gamesnum_t nenc)
 	groupcell_t *c;
 	node_t 		*d;
 	player_t	*e;
-	group_t		**f;
+	group_t	*	*f;
 
 	size_t		sa = sizeof(player_t);
 	size_t		sb = sizeof(player_t);
-	size_t		sc = sizeof(groupcell_t *);
+	size_t		sc = sizeof(groupcell_t); 
 	size_t		sd = sizeof(node_t);
 	size_t		se = sizeof(player_t);
 	size_t		sf = sizeof(group_t *);
@@ -637,19 +637,30 @@ scan_encounters ( const struct ENC *enc, gamesnum_t n_enc
 
 	*psel_n = n_b;
 
-	for (e = 1, r = 0 ; e < n_b; e++) {
-		if (!same_SE_link (&sel[r], &sel[e]) ) {
-			r++;
-			if (r != e) sel[r] = sel[e];
+	if (n_b > 0) {
+		for (e = 1, r = 0 ; e < n_b; e++) {
+			if (!same_SE_link (&sel[r], &sel[e]) ) {
+				r++;
+				if (r != e) sel[r] = sel[e];
+			}
 		}
+		*psel_n = r + 1;
+	} else {
+		*psel_n = 0;
 	}
-	*psel_n = r + 1;
+
+
 }
 
 	return;
 }
 
-static bool_t node_is_occupied (group_var_t *gv, player_t x) {return gv->node[x].group != NULL;}
+static bool_t node_is_occupied (group_var_t *gv, player_t x) 
+{
+	assert(gv);
+	assert(gv->node);
+	return gv->node[x].group != NULL;
+}
 
 static void
 node_add_group (group_var_t *gv, player_t x)
@@ -907,26 +918,26 @@ static group_t *group_next (group_t *g)
 static void
 groupvar_simplify (group_var_t *gv)
 {
-	group_t *g;
-	group_t **cmbbuf;
+	group_t 	*g;
+	group_t *	*cmbbuf;
 	size_t mem = (size_t)gv->nplayers * sizeof (group_t *);
 
-if (NULL != (cmbbuf = memnew (mem))) {
+	if (NULL != (cmbbuf = memnew (mem))) {
 
-	g = groupset_head(gv);
-	assert(g);
+		g = groupset_head(gv);
+		assert(g);
 
-	while(g) {
-		simplify(g,cmbbuf);
-		g = group_next(g);
+		while(g) {
+			simplify(g,cmbbuf);
+			g = group_next(g);
+		}
+		assert(groupset_sanity_check(gv));
+
+		memrel(cmbbuf);
+	} else {
+		fprintf (stderr, "No memory available for group detection\n");
+		exit (EXIT_FAILURE);
 	}
-	assert(groupset_sanity_check(gv));
-
-	memrel(cmbbuf);
-} else {
-	fprintf (stderr, "No memory available for group detection\n");
-	exit (EXIT_FAILURE);
-}
 
 	return;
 }
@@ -1614,8 +1625,8 @@ GV_make
 		, const struct PLAYERS *players
 		)
 {
-	player_t n = 0;
-	bool_t ok = FALSE;
+	player_t 	n = 0;
+	bool_t 		ok = FALSE;
 	group_var_t *gv;
 
 	assert (encounters && players);
@@ -1623,7 +1634,7 @@ GV_make
 
 	if (NULL != (gv = memnew(sizeof(group_var_t)))) {
 		if (groupvar_init (gv, players->n, encounters->n)) {
-			n = groupvar_build(gv, players->n, players->name, players, encounters);
+			n = groupvar_build (gv, players->n, players->name, players, encounters);
 			ok = n > 0 && TRUE;
 		} else {
 			ok = FALSE;
